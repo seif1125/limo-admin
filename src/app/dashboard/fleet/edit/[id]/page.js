@@ -52,13 +52,10 @@ export default function EditCarPage({ params }) {
   const handleUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 3) return alert("Limit is 3 images");
-
     setActionLoading(true);
     setStatusMsg("Uploading new assets...");
-
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
     try {
       const uploadedUrls = [];
       for (const file of files) {
@@ -87,10 +84,8 @@ export default function EditCarPage({ params }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (images.length === 0) return alert("At least 1 image is required");
-
     setActionLoading(true);
     setStatusMsg("Applying changes to database...");
-
     try {
       await api.put(`/cars/${id}`, { 
         ...formData, 
@@ -107,141 +102,115 @@ export default function EditCarPage({ params }) {
     }
   };
 
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '40px 20px' },
-    card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '2px solid #cbd5e1', maxWidth: '1100px', margin: '0 auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
-    sectionLabel: { color: '#2563eb', fontWeight: '900', fontSize: '11px', marginBottom: '25px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' },
-    label: { display: 'block', color: '#000000', fontWeight: '800', fontSize: '13px', marginBottom: '8px' },
-    input: { width: '100%', padding: '14px', borderRadius: '8px', border: '2px solid #cbd5e1', fontSize: '15px', marginBottom: '20px', outline: 'none', color: '#000000', fontWeight: '600' },
-  };
+  // Tailwind helper classes
+  const labelClass = "block text-slate-900 font-extrabold text-[13px] mb-2";
+  const inputClass = "w-full p-3.5 rounded-lg border-2 border-slate-300 focus:border-black bg-white outline-none transition text-slate-900 font-semibold mb-5";
+  const sectionHeaderClass = "text-blue-600 font-black text-[11px] mb-6 border-b-2 border-slate-100 pb-2 uppercase flex items-center gap-2";
 
   if (loading) return <OverlayLoader message="Fetching Details..." />;
 
   return (
-    <div style={css.page}>
+    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
       {actionLoading && <OverlayLoader message={statusMsg} />}
       
-      <div style={css.card}>
-        <Link href="/dashboard/fleet" style={{ color: '#64748b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '25px', textDecoration: 'none', fontSize: '13px' }}>
+      <div className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-[1100px] mx-auto shadow-xl">
+        <Link href="/dashboard/fleet" className="text-blue-600 font-extrabold flex items-center gap-1 mb-6 no-underline text-xs hover:text-slate-700 transition">
           <ArrowLeft size={16} /> CANCEL CHANGES
         </Link>
 
-        <h1 style={{ fontWeight: '900', fontSize: '32px', color: '#0f172a', marginBottom: '40px', letterSpacing: '-1.5px' }}>
-          EDIT VEHICLE: <span style={{ color: '#2563eb' }}>{formData.name.en}</span>
+        <h1 className="font-black text-2xl md:text-3xl text-slate-900 mb-10 tracking-tighter">
+          EDIT VEHICLE: <span className="text-blue-600 uppercase">{formData.name.en}</span>
         </h1>
 
         <form onSubmit={handleSubmit}>
-          {/* ENHANCED IMAGE SECTION */}
-          <div style={css.sectionLabel}><Upload size={14}/> Media Library ({images.length}/3)</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '20px', marginBottom: '40px' }}>
+          {/* IMAGE SECTION */}
+          <div className={sectionHeaderClass}><Upload size={14}/> Media Library ({images.length}/3)</div>
+          <div className="flex flex-wrap gap-4 mb-10">
             {images.map((url, i) => (
-              <div key={i} style={{ position: 'relative', width: '160px', height: '100px', border: '3px solid #2563eb', borderRadius: '10px', overflow: 'hidden' }}>
-                <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button type="button" onClick={() => removeImage(i)} style={{ position: 'absolute', top: '5px', right: '5px', backgroundColor: '#ef4444', color: '#fff', borderRadius: '50%', border: 'none', cursor: 'pointer', padding: '5px' }}>
+              <div key={i} className="relative w-full sm:w-[160px] h-[120px] sm:h-[100px] border-2 border-blue-600 rounded-xl overflow-hidden shadow-md">
+                <img src={url} className="w-full h-full object-cover" />
+                <button type="button" onClick={() => removeImage(i)} className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 border-none cursor-pointer hover:bg-red-600 transition">
                   <X size={14} strokeWidth={3} />
                 </button>
               </div>
             ))}
             {images.length < 3 && (
-              <label className="upload-btn">
-                <Upload size={24} color="#2563eb" />
-                <span style={{ fontSize: '11px', fontWeight: '900', marginTop: '5px', color: '#000' }}>ADD MEDIA</span>
-                <input type="file" multiple onChange={handleUpload} style={{ display: 'none' }} accept="image/*" />
+              <label className="flex flex-col items-center justify-center w-full sm:w-[160px] h-[120px] sm:h-[100px] border-2 border-dashed border-blue-600 rounded-xl cursor-pointer hover:bg-blue-50 transition">
+                <Upload size={24} className="text-blue-600 mb-1" />
+                <span className="text-[10px] font-black text-slate-900">ADD MEDIA</span>
+                <input type="file" multiple onChange={handleUpload} className="hidden" accept="image/*" />
               </label>
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* ENGLISH SECTION */}
             <div>
-              <p style={css.sectionLabel}>English Specification</p>
-              <label style={css.label}>Display Name</label>
-              <input style={css.input} className="black-input" required value={formData.name.en} onChange={(e) => setFormData({...formData, name: {...formData.name, en: e.target.value}})} />
+              <p className={sectionHeaderClass}>English Specification</p>
+              <label className={labelClass}>Display Name</label>
+              <input className={inputClass} required value={formData.name.en} onChange={(e) => setFormData({...formData, name: {...formData.name, en: e.target.value}})} />
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label style={css.label}>Make</label>
-                  <input style={css.input} className="black-input" required value={formData.make.en} onChange={(e) => setFormData({...formData, make: {...formData.make, en: e.target.value}})} />
+                  <label className={labelClass}>Make</label>
+                  <input className={inputClass} required value={formData.make.en} onChange={(e) => setFormData({...formData, make: {...formData.make, en: e.target.value}})} />
                 </div>
                 <div>
-                  <label style={css.label}>Model</label>
-                  <input style={css.input} className="black-input" required value={formData.model.en} onChange={(e) => setFormData({...formData, model: {...formData.model, en: e.target.value}})} />
+                  <label className={labelClass}>Model</label>
+                  <input className={inputClass} required value={formData.model.en} onChange={(e) => setFormData({...formData, model: {...formData.model, en: e.target.value}})} />
                 </div>
               </div>
 
-              <label style={css.label}>Description</label>
-              <textarea style={{ ...css.input, height: '140px', resize: 'none' }} className="black-input" value={formData.description.en} onChange={(e) => setFormData({...formData, description: {...formData.description, en: e.target.value}})} />
+              <label className={labelClass}>Description</label>
+              <textarea className={`${inputClass} h-32 resize-none`} value={formData.description.en} onChange={(e) => setFormData({...formData, description: {...formData.description, en: e.target.value}})} />
             </div>
 
             {/* ARABIC SECTION */}
             <div dir="rtl">
-              <p style={{ ...css.sectionLabel, flexDirection: 'row-reverse' }}>التفاصيل العربية</p>
-              <label style={{ ...css.label, textAlign: 'right' }}>اسم العرض</label>
-              <input style={{ ...css.input, textAlign: 'right' }} className="black-input" required value={formData.name.ar} onChange={(e) => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} />
+              <p className={`${sectionHeaderClass} flex-row-reverse`}>التفاصيل العربية</p>
+              <label className={`${labelClass} text-right`}>اسم العرض</label>
+              <input className={`${inputClass} text-right`} required value={formData.name.ar} onChange={(e) => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} />
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label style={{ ...css.label, textAlign: 'right' }}>الماركة</label>
-                  <input style={{ ...css.input, textAlign: 'right' }} className="black-input" required value={formData.make.ar} onChange={(e) => setFormData({...formData, make: {...formData.make, ar: e.target.value}})} />
+                  <label className={`${labelClass} text-right`}>الماركة</label>
+                  <input className={`${inputClass} text-right`} required value={formData.make.ar} onChange={(e) => setFormData({...formData, make: {...formData.make, ar: e.target.value}})} />
                 </div>
                 <div>
-                  <label style={{ ...css.label, textAlign: 'right' }}>الموديل</label>
-                  <input style={{ ...css.input, textAlign: 'right' }} className="black-input" required value={formData.model.ar} onChange={(e) => setFormData({...formData, model: {...formData.model, ar: e.target.value}})} />
+                  <label className={`${labelClass} text-right`}>الموديل</label>
+                  <input className={`${inputClass} text-right`} required value={formData.model.ar} onChange={(e) => setFormData({...formData, model: {...formData.model, ar: e.target.value}})} />
                 </div>
               </div>
 
-              <label style={{ ...css.label, textAlign: 'right' }}>الوصف</label>
-              <textarea style={{ ...css.input, textAlign: 'right', height: '140px', resize: 'none' }} className="black-input" value={formData.description.ar} onChange={(e) => setFormData({...formData, description: {...formData.description, ar: e.target.value}})} />
+              <label className={`${labelClass} text-right`}>الوصف</label>
+              <textarea className={`${inputClass} text-right h-32 resize-none`} value={formData.description.ar} onChange={(e) => setFormData({...formData, description: {...formData.description, ar: e.target.value}})} />
             </div>
           </div>
 
-          <div style={{ marginTop: '20px', backgroundColor: '#f8fafc', padding: '30px', borderRadius: '12px', border: '2px solid #e2e8f0' }}>
-            <p style={{ ...css.sectionLabel, border: 'none', marginBottom: '15px' }}><DollarSign size={14}/> Logistics & Pricing</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '25px' }}>
+          {/* PRICING SECTION */}
+          <div className="mt-8 bg-slate-50 p-6 md:p-8 rounded-xl border-2 border-slate-200">
+            <p className={`${sectionHeaderClass} border-none mb-4`}><DollarSign size={14}/> Logistics & Pricing</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
-                <label style={css.label}>Manufacture Year</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="black-input" required value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} />
+                <label className={labelClass}>Manufacture Year</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} />
               </div>
               <div>
-                <label style={css.label}>Price / Day (USD)</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="black-input" required value={formData.priceUsd} onChange={(e) => setFormData({...formData, priceUsd: e.target.value})} />
+                <label className={labelClass}>Price / Day (USD)</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceUsd} onChange={(e) => setFormData({...formData, priceUsd: e.target.value})} />
               </div>
               <div>
-                <label style={css.label}>Price / Day (EGP)</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="black-input" required value={formData.priceEgp} onChange={(e) => setFormData({...formData, priceEgp: e.target.value})} />
+                <label className={labelClass}>Price / Day (EGP)</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceEgp} onChange={(e) => setFormData({...formData, priceEgp: e.target.value})} />
               </div>
             </div>
           </div>
 
-          <button type="submit" style={{ width: '100%', backgroundColor: '#000', color: '#fff', padding: '20px', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '40px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+          <button type="submit" className="w-full bg-slate-900 text-white p-5 rounded-xl font-black text-lg tracking-widest mt-10 hover:bg-blue-600 transition-colors flex items-center justify-center gap-3">
             <Save size={20} /> PUSH UPDATES TO FLEET
           </button>
         </form>
       </div>
-
-      <style jsx global>{`
-        .upload-btn {
-          width: 160px; 
-          height: 100px; 
-          border: 3px dashed #2563eb; 
-          border-radius: 10px; 
-          display: flex; 
-          flex-direction: column; 
-          justify-content: center; 
-          align-items: center; 
-          cursor: pointer; 
-          background-color: #fff;
-          transition: all 0.2s;
-        }
-        .upload-btn:hover {
-          background-color: #eff6ff;
-          border-color: #0f172a;
-        }
-        .black-input:focus {
-          border-color: #000 !important;
-          background-color: #f8fafc;
-        }
-      `}</style>
     </div>
   );
 }

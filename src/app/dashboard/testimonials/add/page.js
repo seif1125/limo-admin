@@ -59,76 +59,80 @@ export default function AddTestimonialPage() {
     }
   };
 
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '40px 20px' },
-    card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '2px solid #cbd5e1', maxWidth: '1100px', margin: '0 auto' },
-    label: { display: 'block', color: '#000', fontWeight: '900', fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase' },
-    input: { width: '100%', padding: '14px', borderRadius: '8px', border: '2px solid #cbd5e1', color: '#000', fontWeight: '700', marginBottom: '20px', outline: 'none', fontSize: '15px' },
-    sectionHeader: { color: '#2563eb', fontWeight: '900', fontSize: '11px', marginBottom: '25px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' },
-    uploadArea: { 
-        border: '3px dashed #cbd5e1', padding: '30px', borderRadius: '12px', display: 'flex', flexDirection: 'column', 
-        alignItems: 'center', cursor: 'pointer', background: '#f8fafc', transition: 'all 0.2s', marginBottom: '30px' 
-    }
-  };
+  // Reusable Tailwind classes
+  const labelClass = "block text-slate-900 font-black text-[11px] mb-2 uppercase tracking-wider";
+  const inputClass = "w-full p-4 rounded-lg border-2 border-slate-300 focus:border-blue-600 focus:ring-0 bg-white text-slate-900 font-bold outline-none mb-6 transition-all placeholder:text-slate-400";
+  const sectionHeaderClass = "text-blue-600 font-black text-[11px] mb-6 border-b-2 border-slate-100 pb-2 uppercase tracking-widest flex items-center gap-2";
 
   return (
-    <div style={css.page}>
+    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
       {loading && <OverlayLoader message={statusMsg} />}
       
-      <div style={css.card}>
-        <Link href="/dashboard/testimonials" style={{ color: '#64748b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '25px', textDecoration: 'none', fontSize: '13px' }}>
-          <ArrowLeft size={16} /> BACK TO INVENTORY
+      <div className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-[1100px] mx-auto shadow-xl">
+        <Link href="/dashboard/testimonials" className="text-slate-500 font-extrabold flex items-center gap-1 mb-6 no-underline text-xs hover:text-blue-600 transition-colors uppercase">
+          <ArrowLeft size={16} /> Back to Inventory
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '40px' }}>
-            <MessageSquare color="#000" size={32} />
-            <h1 style={{ fontWeight: '900', fontSize: '32px', color: '#000', margin: 0, letterSpacing: '-1px' }}>ADD NEW REVIEW</h1>
+        <div className="flex items-center gap-4 mb-10">
+           
+            <h1 className="font-black text-2xl md:text-4xl text-slate-900 m-0 tracking-tighter uppercase">
+                Add New Review
+            </h1>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* IMAGE UPLOAD SECTION */}
-          <div style={css.sectionHeader}>Client Identification</div>
-          <label style={css.uploadArea} className="hover-blue">
-            <input type="file" onChange={handleUpload} style={{ display: 'none' }} accept="image/*" />
-            {image ? (
-                <img src={image} style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #2563eb' }} />
-            ) : (
-                <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '50%', border: '2px solid #cbd5e1' }}>
-                    <User size={40} color="#94a3b8" />
+          <div className={sectionHeaderClass}>Client Identification</div>
+          
+          <label className="group flex flex-col items-center justify-center border-4 border-dashed border-slate-200 p-8 rounded-2xl bg-slate-50 cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all mb-10 text-center">
+            <input type="file" onChange={handleUpload} className="hidden" accept="image/*" />
+            
+            <div className="relative">
+                {image ? (
+                    <img src={image} className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-white shadow-xl group-hover:scale-105 transition-transform" alt="Client Preview" />
+                ) : (
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-full flex items-center justify-center border-2 border-slate-200 shadow-inner group-hover:border-blue-300 transition-colors">
+                        <User size={48} className="text-slate-300" />
+                    </div>
+                )}
+                <div className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white shadow-lg">
+                    <Upload size={16} />
                 </div>
-            )}
-            <p style={{ color: '#000', fontWeight: '900', marginTop: '15px', fontSize: '14px' }}>
-                {image ? "CHANGE PHOTO" : "UPLOAD CLIENT PHOTO"}
+            </div>
+            
+            <p className="text-slate-900 font-black mt-4 text-sm tracking-tight uppercase">
+                {image ? "Change Photo" : "Upload Client Photo"}
             </p>
-            <span style={{ color: '#64748b', fontSize: '11px', fontWeight: '700' }}>Recommended: Square aspect ratio (e.g. 500x500)</span>
+            <p className="text-slate-400 text-[10px] font-bold mt-1 uppercase">Recommended: Square Aspect Ratio</p>
           </label>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '50px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+            
             {/* ENGLISH SECTION */}
             <div>
-              <div style={css.sectionHeader}>English Content</div>
+              <div className={sectionHeaderClass}>English Content</div>
               
-              <label style={css.label}>Client Name (EN)</label>
+              <label className={labelClass}>Client Name (EN)</label>
               <input 
-                style={css.input} 
+                className={inputClass} 
                 placeholder="e.g. John Doe" 
                 required 
                 value={formData.name.en} 
                 onChange={e => setFormData({...formData, name: {...formData.name, en: e.target.value}})} 
               />
 
-              <label style={css.label}>Position / Title (EN)</label>
+              <label className={labelClass}>Position / Title (EN)</label>
               <input 
-                style={css.input} 
+                className={inputClass} 
                 placeholder="e.g. Business Traveler" 
                 required 
                 value={formData.title.en} 
                 onChange={e => setFormData({...formData, title: {...formData.title, en: e.target.value}})} 
               />
 
-              <label style={css.label}>Review Text (EN)</label>
+              <label className={labelClass}>Review Text (EN)</label>
               <textarea 
-                style={{ ...css.input, height: '150px', resize: 'none' }} 
+                className={`${inputClass} h-40 resize-none`} 
                 placeholder="Write the feedback here..." 
                 required 
                 value={formData.text.en} 
@@ -138,29 +142,29 @@ export default function AddTestimonialPage() {
 
             {/* ARABIC SECTION */}
             <div dir="rtl">
-              <div style={{ ...css.sectionHeader, textAlign: 'right' }}>المحتوى العربي</div>
+              <div className={`${sectionHeaderClass} flex-row-reverse`}>المحتوى العربي</div>
               
-              <label style={{ ...css.label, textAlign: 'right' }}>اسم العميل (AR)</label>
+              <label className={`${labelClass} text-right`}>اسم العميل (AR)</label>
               <input 
-                style={{ ...css.input, textAlign: 'right' }} 
+                className={`${inputClass} text-right`} 
                 placeholder="مثال: محمد أحمد" 
                 required 
                 value={formData.name.ar} 
                 onChange={e => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} 
               />
 
-              <label style={{ ...css.label, textAlign: 'right' }}>المسمى الوظيفي (AR)</label>
+              <label className={`${labelClass} text-right`}>المسمى الوظيفي (AR)</label>
               <input 
-                style={{ ...css.input, textAlign: 'right' }} 
+                className={`${inputClass} text-right`} 
                 placeholder="مثال: عميل دائم" 
                 required 
                 value={formData.title.ar} 
                 onChange={e => setFormData({...formData, title: {...formData.title, ar: e.target.value}})} 
               />
 
-              <label style={{ ...css.label, textAlign: 'right' }}>نص التقييم (AR)</label>
+              <label className={`${labelClass} text-right`}>نص التقييم (AR)</label>
               <textarea 
-                style={{ ...css.input, textAlign: 'right', height: '150px', resize: 'none' }} 
+                className={`${inputClass} text-right h-40 resize-none`} 
                 placeholder="اكتب مراجعة العميل هنا..." 
                 required 
                 value={formData.text.ar} 
@@ -171,23 +175,12 @@ export default function AddTestimonialPage() {
 
           <button 
             type="submit" 
-            style={{ 
-                width: '100%', backgroundColor: '#000', color: '#fff', padding: '20px', 
-                borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer', 
-                marginTop: '20px', fontSize: '16px', letterSpacing: '1px' 
-            }}
+            className="w-full bg-slate-900 hover:bg-blue-600 text-white p-5 rounded-xl font-black text-lg tracking-widest mt-6 transition-all shadow-lg active:scale-[0.98] uppercase"
           >
-            SAVE & PUBLISH TESTIMONIAL
+            Save & Publish Testimonial
           </button>
         </form>
       </div>
-
-      <style jsx>{`
-        .hover-blue:hover {
-            border-color: #2563eb !important;
-            background-color: #eff6ff !important;
-        }
-      `}</style>
     </div>
   );
 }

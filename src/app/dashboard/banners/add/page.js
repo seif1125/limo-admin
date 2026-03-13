@@ -25,12 +25,6 @@ export default function AddBannerPage() {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-    if (!cloudName || !uploadPreset) {
-        console.error("Missing Cloudinary Env Variables");
-        setUploadStatus('error');
-        return;
-    }
-
     const data = new FormData();
     data.append("file", file);
     data.append("upload_preset", uploadPreset); 
@@ -40,19 +34,15 @@ export default function AddBannerPage() {
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         { method: "POST", body: data }
       );
-      
       const fileData = await res.json();
-      
       if (res.ok && fileData.secure_url) {
         setFormData((prev) => ({ ...prev, imageUrl: fileData.secure_url }));
         setUploadStatus('success');
       } else {
         setUploadStatus('error');
-        console.error("Cloudinary Detailed Error:", JSON.stringify(fileData));
       }
     } catch (err) {
       setUploadStatus('error');
-      console.error("Network Error:", err);
     }
   };
 
@@ -60,109 +50,106 @@ export default function AddBannerPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Using the stored API URL preference, fallback to localhost:5050
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api';
       await api.post(`${apiUrl}/banners`, formData); 
       router.push('/dashboard/banners');
     } catch (err) {
-      console.error(err);
-      alert("Connection failed. Check your Backend Terminal for the 400/500 error details.");
+      alert("Connection failed. Check your Backend Terminal.");
     } finally {
       setLoading(false);
     }
   };
 
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '40px 20px' },
-    card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '2px solid #cbd5e1', maxWidth: '1000px', margin: '0 auto', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' },
-    label: { display: 'block', color: '#000000', fontWeight: '900', fontSize: '12px', marginBottom: '8px', textTransform: 'uppercase' },
-    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '2px solid #cbd5e1', fontSize: '15px', color: '#000000', marginBottom: '15px', boxSizing: 'border-box' },
-    uploadBox: { 
-      border: '3px dashed #2563eb', borderRadius: '15px', padding: '40px', textAlign: 'center', 
-      backgroundColor: '#f0f7ff', cursor: 'pointer', display: 'block', marginBottom: '40px'
-    },
-    sectionTitle: { color: '#2563eb', fontWeight: '900', fontSize: '12px', marginBottom: '15px', borderBottom: '2px solid #e2e8f0', paddingBottom: '5px' },
-    saveBtn: { 
-        backgroundColor: '#000000', color: '#ffffff', width: '100%', padding: '18px', 
-        borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer', 
-        fontSize: '16px', letterSpacing: '1px', marginTop: '20px'
-    }
-  };
+  // Reusable Tailwind classes to replace the css object
+  const inputClass = "w-full p-3 rounded-lg border-2 border-slate-300 focus:border-blue-500 outline-none transition text-black font-medium mb-4";
+  const labelClass = "block text-black font-black text-[11px] mb-2 uppercase tracking-wider";
 
   return (
-    <div style={css.page}>
-      <div style={css.card}>
-        <Link href="/dashboard/banners" style={{ color: '#2563eb', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '25px', textDecoration: 'none' }}>
+    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
+      <div className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-5xl mx-auto shadow-xl">
+        
+        <Link href="/dashboard/banners" className="text-blue-600 font-bold flex items-center gap-2 mb-6 no-underline hover:translate-x-[-4px] transition-transform">
           <ArrowLeft size={18} /> BACK TO LIST
         </Link>
 
-        <h1 style={{ color: '#000000', fontSize: '32px', fontWeight: '900', marginBottom: '40px', borderLeft: '8px solid #2563eb', paddingLeft: '15px' }}>
+        <h1 className="text-black text-2xl md:text-4xl font-black mb-8  pl-4">
             ADD NEW BANNER
         </h1>
 
         <form onSubmit={handleSubmit}>
           {/* UPLOAD SECTION */}
-          <label style={css.uploadBox}>
-            <input type="file" onChange={handleImageUpload} style={{ display: 'none' }} />
+          <label className="border-4 border-dashed border-blue-600 rounded-2xl p-6 md:p-10 text-center bg-blue-50 cursor-pointer block mb-8 hover:bg-blue-100 transition">
+            <input type="file" onChange={handleImageUpload} className="hidden" />
+            
             {uploadStatus === 'uploading' && (
-              <div style={{ color: '#2563eb' }}>
-                <Loader2 className="animate-spin" style={{ margin: '0 auto 10px' }} size={40} />
-                <p style={{ fontWeight: '900' }}>UPLOADING TO CLOUDINARY...</p>
+              <div className="text-slate-900">
+                <Loader2 className="animate-spin mx-auto mb-3" size={40} />
+                <p className="font-black uppercase text-sm">Uploading to Cloudinary...</p>
               </div>
             )}
+            
             {uploadStatus === 'success' && (
-              <div style={{ color: '#059669' }}>
-                <CheckCircle style={{ margin: '0 auto 10px' }} size={40} />
-                <p style={{ fontWeight: '900' }}>IMAGE UPLOADED</p>
-                <img src={formData.imageUrl} style={{ height: '120px', borderRadius: '8px', marginTop: '10px', border: '2px solid #059669' }} alt="preview" />
+              <div className="text-emerald-600">
+                <CheckCircle className="mx-auto mb-3" size={40} />
+                <p className="font-black uppercase text-sm mb-4">Image Uploaded Successfully</p>
+                <img src={formData.imageUrl} className="h-32 md:h-40 mx-auto rounded-lg border-4 border-emerald-500 shadow-lg object-cover" alt="preview" />
               </div>
             )}
+            
             {uploadStatus === 'idle' && (
-              <div style={{ color: '#2563eb' }}>
-                <Upload size={40} style={{ margin: '0 auto 10px' }} />
-                <p style={{ color: '#000000', fontWeight: '900' }}>CLICK TO UPLOAD IMAGE</p>
+              <div className="text-slate-900">
+                <Upload size={40} className="mx-auto mb-3" />
+                <p className="text-black font-black uppercase text-sm">Click to Upload Banner Image</p>
+              </div>
+            )}
+            
+            {uploadStatus === 'error' && (
+              <div className="text-red-600">
+                <Upload size={40} className="mx-auto mb-3" />
+                <p className="font-black uppercase text-sm">Upload Failed. Try Again.</p>
               </div>
             )}
           </label>
 
           {/* DUAL LANGUAGE CONTENT */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 mb-8">
+            
             {/* ENGLISH COLUMN */}
-            <div>
-              <p style={css.sectionTitle}>ENGLISH CONTENT</p>
+            <div className="space-y-1">
+              <p className="text-slate-900 font-black text-xs mb-4 border-b-2 border-slate-200 pb-2 uppercase tracking-widest">English Content</p>
               
-              <label style={css.label}>Main Title</label>
-              <input style={css.input} required value={formData.title.en} onChange={(e) => setFormData({...formData, title: {...formData.title, en: e.target.value}})} />
+              <label className={labelClass}>Main Title</label>
+              <input className={inputClass} required value={formData.title.en} onChange={(e) => setFormData({...formData, title: {...formData.title, en: e.target.value}})} />
               
-              <label style={css.label}>Subtitle</label>
-              <input style={css.input} value={formData.subtitle.en} onChange={(e) => setFormData({...formData, subtitle: {...formData.subtitle, en: e.target.value}})} />
+              <label className={labelClass}>Subtitle</label>
+              <input className={inputClass} value={formData.subtitle.en} onChange={(e) => setFormData({...formData, subtitle: {...formData.subtitle, en: e.target.value}})} />
               
-              <label style={css.label}>Button Text</label>
-              <input style={css.input} placeholder="e.g. Shop Now" value={formData.button1.text.en} onChange={(e) => setFormData({...formData, button1: {...formData.button1, text: {...formData.button1.text, en: e.target.value}}})} />
+              <label className={labelClass}>Button Text</label>
+              <input className={inputClass} placeholder="e.g. Shop Now" value={formData.button1.text.en} onChange={(e) => setFormData({...formData, button1: {...formData.button1, text: {...formData.button1.text, en: e.target.value}}})} />
             </div>
 
             {/* ARABIC COLUMN */}
-            <div dir="rtl">
-              <p style={{...css.sectionTitle, textAlign: 'right'}}>المحتوى العربي</p>
+            <div dir="rtl" className="space-y-1">
+              <p className="text-slate-900 font-black text-xs mb-4 border-b-2 border-slate-200 pb-2 uppercase tracking-widest text-right">المحتوى العربي</p>
               
-              <label style={{...css.label, textAlign: 'right'}}>العنوان الرئيسي</label>
-              <input style={{...css.input, textAlign: 'right'}} required value={formData.title.ar} onChange={(e) => setFormData({...formData, title: {...formData.title, ar: e.target.value}})} />
+              <label className={`${labelClass} text-right`}>العنوان الرئيسي</label>
+              <input className={`${inputClass} text-right`} required value={formData.title.ar} onChange={(e) => setFormData({...formData, title: {...formData.title, ar: e.target.value}})} />
               
-              <label style={{...css.label, textAlign: 'right'}}>العنوان الفرعي</label>
-              <input style={{...css.input, textAlign: 'right'}} value={formData.subtitle.ar} onChange={(e) => setFormData({...formData, subtitle: {...formData.subtitle, ar: e.target.value}})} />
+              <label className={`${labelClass} text-right`}>العنوان الفرعي</label>
+              <input className={`${inputClass} text-right`} value={formData.subtitle.ar} onChange={(e) => setFormData({...formData, subtitle: {...formData.subtitle, ar: e.target.value}})} />
               
-              <label style={{...css.label, textAlign: 'right'}}>نص الزر</label>
-              <input style={{...css.input, textAlign: 'right'}} placeholder="مثلاً: تسوق الآن" value={formData.button1.text.ar} onChange={(e) => setFormData({...formData, button1: {...formData.button1, text: {...formData.button1.text, ar: e.target.value}}})} />
+              <label className={`${labelClass} text-right`}>نص الزر</label>
+              <input className={`${inputClass} text-right`} placeholder="مثلاً: تسوق الآن" value={formData.button1.text.ar} onChange={(e) => setFormData({...formData, button1: {...formData.button1, text: {...formData.button1.text, ar: e.target.value}}})} />
             </div>
           </div>
 
           {/* BUTTON LINK (Shared) */}
-          <div style={{ marginTop: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-            <label style={css.label}>Button Redirect Link (URL)</label>
-            <div style={{ position: 'relative' }}>
-                <LinkIcon size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: '#64748b' }} />
+          <div className="border-t-2 border-slate-100 pt-6 mb-8">
+            <label className={labelClass}>Button Redirect Link (URL)</label>
+            <div className="relative">
+                <LinkIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
                 <input 
-                    style={{ ...css.input, paddingLeft: '40px' }} 
+                    className={`${inputClass} pl-10`} 
                     placeholder="/shop or https://example.com" 
                     value={formData.button1.link} 
                     onChange={(e) => setFormData({...formData, button1: {...formData.button1, link: e.target.value}})} 
@@ -173,13 +160,13 @@ export default function AddBannerPage() {
           <button 
             type="submit" 
             disabled={loading || uploadStatus !== 'success'} 
-            style={{ 
-              ...css.saveBtn,
-              backgroundColor: uploadStatus === 'success' ? '#000000' : '#cbd5e1', 
-              opacity: loading ? 0.7 : 1
-            }}
+            className={`
+                w-full p-5 rounded-xl font-black text-lg tracking-widest transition-all
+                ${uploadStatus === 'success' ? 'bg-slate-900 text-white hover:bg-blue-700' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}
+                ${loading ? 'opacity-70 animate-pulse' : ''}
+            `}
           >
-            {loading ? 'SAVING TO DATABASE...' : 'SAVE BANNER'}
+            {loading ? 'SAVING DATA...' : 'SAVE BANNER'}
           </button>
         </form>
       </div>

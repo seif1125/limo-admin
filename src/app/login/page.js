@@ -81,7 +81,7 @@ export default function AuthPage() {
         </div>
         
         <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 5px 0' }}>RESERVATIONS HUB</h1>
-        <p style={{ color: '#64748b', fontSize: '13px', fontWeight: '600', marginBottom: '25px' }}>Management Portal v2.0</p>
+    
 
         {/* Login/Register Tabs */}
         <div style={css.tabContainer}>
@@ -138,17 +138,6 @@ export default function AuthPage() {
             {isLogin ? "ACCESS DASHBOARD" : "CREATE ACCOUNT"} <ArrowRight size={18} />
           </button>
         </form>
-
-        {isLogin && (
-          <button style={css.footerLink} onClick={() => window.location.href = '/forgot-password'}>
-            Forgot password?
-          </button>
-        )}
-      </div>
-
-      {/* Security Footer */}
-      <div style={{ position: 'fixed', bottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '11px', fontWeight: '800' }}>
-        <ShieldCheck size={14} /> ENCRYPTED SESSION
       </div>
     </div>
   );

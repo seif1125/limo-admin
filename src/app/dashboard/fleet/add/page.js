@@ -81,54 +81,54 @@ export default function AddCarPage() {
       await api.post('/cars', payload);
       router.push('/dashboard/fleet');
     } catch (err) {
-      console.error("Submission error:", err.response?.data || err.message);
       alert("Failed to save. Check if all required fields are filled.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Re-usable CSS object for consistency
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '40px 20px' },
-    card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '2px solid #cbd5e1', maxWidth: '1100px', margin: '0 auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
-    sectionLabel: { color: '#2563eb', fontWeight: '900', fontSize: '11px', marginBottom: '25px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' },
-    label: { display: 'block', color: '#000000', fontWeight: '800', fontSize: '13px', marginBottom: '8px' },
-    input: { width: '100%', padding: '14px', borderRadius: '8px', border: '2px solid #cbd5e1', fontSize: '15px', marginBottom: '20px', outline: 'none', transition: 'all 0.2s', color: '#000000', fontWeight: '600' },
-  };
+  // Reusable Tailwind classes
+  const labelClass = "block text-slate-900 font-extrabold text-[13px] mb-2";
+  const inputClass = "w-full p-3.5 rounded-lg border-2 border-slate-300 focus:border-black outline-none transition-all text-slate-900 font-semibold mb-5 placeholder:text-slate-400";
+  const sectionHeaderClass = "text-blue-600 font-black text-[11px] mb-6 border-b-2 border-slate-100 pb-2 uppercase flex items-center gap-2 tracking-widest";
 
   return (
-    <div style={css.page}>
+    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
       {loading && <OverlayLoader message={statusMessage} />}
       
-      <div style={css.card}>
-        <Link href="/dashboard/fleet" style={{ color: '#64748b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '25px', textDecoration: 'none', fontSize: '13px' }}>
+      <div className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-[1100px] mx-auto shadow-xl">
+        <Link href="/dashboard/fleet" className="text-blue-600 font-extrabold flex items-center gap-1 mb-6 no-underline text-xs hover:text-slate-800 transition">
           <ArrowLeft size={16} /> RETURN TO LIST
         </Link>
 
-        <h1 style={{ fontWeight: '900', fontSize: '32px', color: '#0f172a', marginBottom: '40px', letterSpacing: '-1.5px' }}>
+        <h1 className="font-black text-2xl md:text-4xl text-slate-900 mb-10 tracking-tighter">
           REGISTER NEW VEHICLE
         </h1>
 
         <form onSubmit={handleSubmit}>
           
-          {/* ENHANCED MEDIA UPLOAD SECTION */}
-          <div style={css.sectionLabel}><Upload size={14}/> Vehicle Media Assets ({images.length}/3)</div>
-          <label className="upload-label">
-            <input type="file" multiple disabled={images.length >= 3} onChange={handleMultipleImageUpload} style={{ display: 'none' }} accept="image/*" />
-            <Upload size={36} style={{ margin: '0 auto 10px', color: '#2563eb' }} />
-            <p style={{ fontWeight: '800', fontSize: '15px', color: '#0f172a', margin: 0 }}>
-              {images.length >= 3 ? "Upload Limit Reached" : "Drag & Drop or Click to Upload Car Photos"}
+          {/* MEDIA UPLOAD SECTION */}
+          <div className={sectionHeaderClass}><Upload size={14}/> Vehicle Media Assets ({images.length}/3)</div>
+          
+          <label className="block border-4 border-dashed border-blue-600 p-6 md:p-10 rounded-2xl text-center bg-blue-50 cursor-pointer hover:bg-blue-100 transition group">
+            <input type="file" multiple disabled={images.length >= 3} onChange={handleMultipleImageUpload} className="hidden" accept="image/*" />
+            <Upload size={36} className="mx-auto mb-3 text-blue-600 group-hover:scale-110 transition-transform" />
+            <p className="font-black text-sm md:text-base text-slate-900 m-0 uppercase">
+              {images.length >= 3 ? "Upload Limit Reached" : "Click to Upload Car Photos"}
             </p>
-            <p style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>Attach up to 3 high-resolution images</p>
+            <p className="text-xs text-slate-500 mt-2 font-bold uppercase tracking-tight">Attach up to 3 high-resolution images</p>
           </label>
 
-          {/* ORGANIZED THUMBNAIL GRID */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px', marginTop: '20px', marginBottom: '40px' }}>
+          {/* THUMBNAIL GRID */}
+          <div className="flex flex-wrap gap-4 mt-6 mb-10">
             {images.map((url, i) => (
-              <div key={i} style={{ position: 'relative', width: '150px', height: '100px', border: '3px solid #2563eb', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button type="button" onClick={() => removeImage(i)} style={{ position: 'absolute', top: '5px', right: '5px', backgroundColor: 'rgba(239, 68, 68, 0.9)', border: 'none', color: '#fff', borderRadius: '50%', cursor: 'pointer', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div key={i} className="relative w-full sm:w-[150px] h-[100px] border-2 border-blue-600 rounded-xl overflow-hidden shadow-md">
+                <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                <button 
+                  type="button" 
+                  onClick={() => removeImage(i)} 
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition shadow-lg"
+                >
                   <X size={14} strokeWidth={3} />
                 </button>
               </div>
@@ -136,97 +136,75 @@ export default function AddCarPage() {
           </div>
 
           {/* BILINGUAL SPECIFICATIONS */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             
             {/* ENGLISH SECTION */}
             <div>
-              <p style={css.sectionLabel}>English Specification</p>
-              <label style={css.label}>Display Name</label>
-              <input style={css.input} className="enhanced-input" required value={formData.name.en} onChange={(e) => setFormData({...formData, name: {...formData.name, en: e.target.value}})} placeholder="e.g. Rolls Royce Phantom" />
+              <p className={sectionHeaderClass}>English Specification</p>
+              <label className={labelClass}>Display Name</label>
+              <input className={inputClass} required value={formData.name.en} onChange={(e) => setFormData({...formData, name: {...formData.name, en: e.target.value}})} placeholder="e.g. Rolls Royce Phantom" />
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
                 <div>
-                  <label style={css.label}>Make</label>
-                  <input style={css.input} className="enhanced-input" required value={formData.make.en} onChange={(e) => setFormData({...formData, make: {...formData.make, en: e.target.value}})} placeholder="Rolls Royce" />
+                  <label className={labelClass}>Make</label>
+                  <input className={inputClass} required value={formData.make.en} onChange={(e) => setFormData({...formData, make: {...formData.make, en: e.target.value}})} placeholder="Rolls Royce" />
                 </div>
                 <div>
-                  <label style={css.label}>Model</label>
-                  <input style={css.input} className="enhanced-input" required value={formData.model.en} onChange={(e) => setFormData({...formData, model: {...formData.model, en: e.target.value}})} placeholder="Phantom" />
+                  <label className={labelClass}>Model</label>
+                  <input className={inputClass} required value={formData.model.en} onChange={(e) => setFormData({...formData, model: {...formData.model, en: e.target.value}})} placeholder="Phantom" />
                 </div>
               </div>
 
-              <label style={css.label}>Description</label>
-              <textarea style={{ ...css.input, height: '140px', resize: 'none', marginBottom: '10px' }} className="enhanced-input" value={formData.description.en} onChange={(e) => setFormData({...formData, description: {...formData.description, en: e.target.value}})} placeholder="Brief overview of vehicle features..." />
+              <label className={labelClass}>Description</label>
+              <textarea className={`${inputClass} h-32 resize-none`} value={formData.description.en} onChange={(e) => setFormData({...formData, description: {...formData.description, en: e.target.value}})} placeholder="Brief overview of vehicle features..." />
             </div>
 
             {/* ARABIC SECTION */}
             <div dir="rtl">
-              <p style={{ ...css.sectionLabel, flexDirection: 'row-reverse' }}>التفاصيل العربية</p>
-              <label style={{ ...css.label, textAlign: 'right' }}>اسم العرض</label>
-              <input style={{ ...css.input, textAlign: 'right' }} className="enhanced-input" required value={formData.name.ar} onChange={(e) => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} placeholder="مثال: رولز رويس فانتوم" />
+              <p className={`${sectionHeaderClass} flex-row-reverse`}>التفاصيل العربية</p>
+              <label className={`${labelClass} text-right`}>اسم العرض</label>
+              <input className={`${inputClass} text-right`} required value={formData.name.ar} onChange={(e) => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} placeholder="مثال: رولز رويس فانتوم" />
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
                 <div>
-                  <label style={{ ...css.label, textAlign: 'right' }}>الماركة</label>
-                  <input style={{ ...css.input, textAlign: 'right' }} className="enhanced-input" required value={formData.make.ar} onChange={(e) => setFormData({...formData, make: {...formData.make, ar: e.target.value}})} />
+                  <label className={`${labelClass} text-right`}>الماركة</label>
+                  <input className={`${inputClass} text-right`} required value={formData.make.ar} onChange={(e) => setFormData({...formData, make: {...formData.make, ar: e.target.value}})} />
                 </div>
                 <div>
-                  <label style={{ ...css.label, textAlign: 'right' }}>الموديل</label>
-                  <input style={{ ...css.input, textAlign: 'right' }} className="enhanced-input" required value={formData.model.ar} onChange={(e) => setFormData({...formData, model: {...formData.model, ar: e.target.value}})} />
+                  <label className={`${labelClass} text-right`}>الموديل</label>
+                  <input className={`${inputClass} text-right`} required value={formData.model.ar} onChange={(e) => setFormData({...formData, model: {...formData.model, ar: e.target.value}})} />
                 </div>
               </div>
 
-              <label style={{ ...css.label, textAlign: 'right' }}>الوصف</label>
-              <textarea style={{ ...css.input, textAlign: 'right', height: '140px', resize: 'none', marginBottom: '10px' }} className="enhanced-input" value={formData.description.ar} onChange={(e) => setFormData({...formData, description: {...formData.description, ar: e.target.value}})} placeholder="موجز عن مميزات السيارة..." />
+              <label className={`${labelClass} text-right`}>الوصف</label>
+              <textarea className={`${inputClass} text-right h-32 resize-none`} value={formData.description.ar} onChange={(e) => setFormData({...formData, description: {...formData.description, ar: e.target.value}})} placeholder="موجز عن مميزات السيارة..." />
             </div>
           </div>
 
-          {/* LOGISTICS & PRICING GRID */}
-          <div style={{ marginTop: '20px', backgroundColor: '#f8fafc', padding: '30px', borderRadius: '12px', border: '2px solid #e2e8f0' }}>
-            <p style={{ ...css.sectionLabel, border: 'none', marginBottom: '15px' }}><DollarSign size={14}/> Logistics & Pricing</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '25px' }}>
+          {/* PRICING SECTION */}
+          <div className="mt-8 bg-slate-50 p-6 md:p-8 rounded-xl border-2 border-slate-200">
+            <p className={`${sectionHeaderClass} border-none mb-4`}><DollarSign size={14}/> Logistics & Pricing</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
-                <label style={css.label}>Manufacture Year</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="enhanced-input" required value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} placeholder="e.g. 2024" />
+                <label className={labelClass}>Manufacture Year</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} placeholder="2024" />
               </div>
               <div>
-                <label style={css.label}>Price / Day (USD)</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="enhanced-input" required value={formData.priceUsd} onChange={(e) => setFormData({...formData, priceUsd: e.target.value})} placeholder="150" />
+                <label className={labelClass}>Price / Day (USD)</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceUsd} onChange={(e) => setFormData({...formData, priceUsd: e.target.value})} placeholder="150" />
               </div>
               <div>
-                <label style={css.label}>Price / Day (EGP)</label>
-                <input type="number" style={{ ...css.input, marginBottom: 0 }} className="enhanced-input" required value={formData.priceEgp} onChange={(e) => setFormData({...formData, priceEgp: e.target.value})} placeholder="7500" />
+                <label className={labelClass}>Price / Day (EGP)</label>
+                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceEgp} onChange={(e) => setFormData({...formData, priceEgp: e.target.value})} placeholder="7500" />
               </div>
             </div>
           </div>
 
-          <button type="submit" style={{ width: '100%', backgroundColor: '#000000', color: '#ffffff', padding: '20px', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer', marginTop: '40px', fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase', transition: 'background-color 0.2s' }}>
+          <button type="submit" className="w-full bg-slate-900 text-white p-5 rounded-xl font-black text-lg tracking-widest mt-10 hover:bg-blue-600 transition-colors uppercase shadow-lg">
             SUBMIT TO FLEET INVENTORY
           </button>
         </form>
       </div>
-
-      <style jsx global>{`
-        .upload-label {
-          display: block;
-          border: 3px dashed #2563eb;
-          padding: 30px;
-          border-radius: 12px;
-          text-align: center;
-          cursor: pointer;
-          background-color: #ffffff;
-          transition: all 0.2s;
-        }
-        .upload-label:hover {
-          border-color: #0f172a;
-          background-color: #eff6ff;
-        }
-        .enhanced-input:focus {
-          border-color: #000000 !important;
-          box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-          background-color: #f8fafc;
-        }
-      `}</style>
     </div>
   );
 }

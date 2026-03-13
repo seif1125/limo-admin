@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { Save, MapPin, Phone, Mail, Globe, Plus, Trash2, Facebook, Instagram } from 'lucide-react';
+import { Save, MapPin, Phone, Mail, Globe, Trash2, Facebook, Instagram } from 'lucide-react';
 import OverlayLoader from '@/components/loader';
 
 export default function ContactSettings() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [resetData, setResetData] = useState(null); // Stores the original data from DB
+  const [resetData, setResetData] = useState(null); 
   const [formData, setFormData] = useState({
     phone: '', email: '', whatsapp: '', facebook: '', instagram: '',
     locations: []
@@ -17,13 +17,12 @@ export default function ContactSettings() {
     api.get('/contact').then(res => {
       if(res.data) {
         setFormData(res.data);
-        setResetData(JSON.stringify(res.data)); // Save baseline as string for easy comparison
+        setResetData(JSON.stringify(res.data)); 
       }
       setLoading(false);
     });
   }, []);
 
-  // Check if current state differs from the baseline
   const isChanged = JSON.stringify(formData) !== resetData;
 
   const addLocation = () => {
@@ -40,7 +39,6 @@ export default function ContactSettings() {
 
   const handleLocationChange = (index, field, lang, value) => {
     const newLocs = [...formData.locations];
-    // Deep clone the object to avoid reference issues
     const updatedLoc = { ...newLocs[index] };
     if (lang) {
         updatedLoc[field] = { ...updatedLoc[field], [lang]: value };
@@ -58,7 +56,7 @@ export default function ContactSettings() {
     setActionLoading(true);
     try {
       const res = await api.post('/contact', formData);
-      setResetData(JSON.stringify(res.data)); // Update baseline after successful save
+      setResetData(JSON.stringify(res.data)); 
       alert("Contact settings updated successfully!");
     } catch (err) {
       alert("Failed to update.");
@@ -67,105 +65,122 @@ export default function ContactSettings() {
     }
   };
 
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '40px 20px' },
-    card: { backgroundColor: '#ffffff', padding: '40px', borderRadius: '16px', border: '2px solid #cbd5e1', maxWidth: '1200px', margin: '0 auto' },
-    sectionLabel: { color: '#2563eb', fontWeight: '900', fontSize: '11px', marginBottom: '20px', borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', textTransform: 'uppercase' },
-    label: { display: 'block', color: '#000', fontWeight: '900', fontSize: '12px', marginBottom: '8px' },
-    input: { width: '100%', padding: '12px', borderRadius: '8px', border: '2px solid #cbd5e1', color: '#000', fontWeight: '700', marginBottom: '15px', outline: 'none' },
-    locationCard: { border: '2px solid #e2e8f0', padding: '20px', borderRadius: '12px', marginBottom: '20px', backgroundColor: '#f8fafc', position: 'relative' },
-    saveBtn: { 
-        backgroundColor: isChanged ? '#000' : '#cbd5e1', 
-        color: isChanged ? '#fff' : '#94a3b8', 
-        padding: '12px 30px', 
-        borderRadius: '8px', 
-        fontWeight: '900', 
-        border: 'none', 
-        cursor: isChanged ? 'pointer' : 'not-allowed', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px',
-        transition: 'all 0.3s ease'
-    }
-  };
-
-  if (loading) return <OverlayLoader message="Fetching contact info..." />;
+  // Reusable Tailwind classes
+  const labelClass = "flex items-center gap-2 text-slate-900 font-black text-[11px] mb-2 uppercase tracking-wider";
+  const inputClass = "w-full p-3.5 rounded-lg border-2 border-slate-300 focus:border-blue-600 focus:ring-0 bg-white text-slate-900 font-bold outline-none mb-5 transition-all";
+  const sectionHeaderClass = "text-blue-600 font-black text-[11px] mb-6 border-b-2 border-slate-100 pb-2 uppercase tracking-widest flex items-center justify-between";
 
   return (
-    <div style={css.page}>
+    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
       {actionLoading && <OverlayLoader message="Saving changes..." />}
-      <form onSubmit={handleSubmit} style={css.card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+      
+      <form onSubmit={handleSubmit} className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-[1100px] mx-auto shadow-xl">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 style={{ fontWeight: '900', fontSize: '30px', color: '#000', margin: 0 }}>CONTACT & LOCATIONS</h1>
-            {!isChanged && <p style={{ color: '#64748b', fontSize: '11px', fontWeight: '700', marginTop: '5px' }}>NO CHANGES DETECTED</p>}
+            <h1 className="font-black text-2xl md:text-4xl text-slate-900 m-0 tracking-tighter uppercase">
+                Contact & Locations
+            </h1>
+            {!isChanged ? (
+              <p className="text-slate-400 text-[10px] font-bold mt-1 uppercase tracking-widest">No changes detected</p>
+            ) : (
+              <p className="text-blue-600 text-[10px] font-bold mt-1 uppercase tracking-widest animate-pulse">Unsaved changes present</p>
+            )}
           </div>
           <button 
             type="submit" 
             disabled={!isChanged} 
-            style={css.saveBtn}
+            className={`w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-black text-sm transition-all shadow-lg uppercase tracking-widest ${
+                isChanged ? 'bg-slate-900 text-white hover:bg-blue-600 cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            }`}
           >
-            <Save size={18} /> SAVE SETTINGS
+            <Save size={18} /> Save Settings
           </button>
         </div>
 
-        {/* PRIMARY CONTACTS */}
-        <div style={css.sectionLabel}>Primary Channels</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        {/* PRIMARY CHANNELS GRID */}
+        <div className={sectionHeaderClass}>Primary Channels</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6">
           <div>
-            <label style={css.label}><Phone size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> Phone Number</label>
-            <input style={css.input} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            <label className={labelClass}><Phone size={14} /> Phone Number</label>
+            <input className={inputClass} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+20..." />
           </div>
           <div>
-            <label style={css.label}><Mail size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> Business Email</label>
-            <input style={css.input} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+            <label className={labelClass}><Mail size={14} /> Business Email</label>
+            <input className={inputClass} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="info@company.com" />
           </div>
           <div>
-            <label style={css.label}><Globe size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> WhatsApp</label>
-            <input style={css.input} value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} />
+            <label className={labelClass}><Globe size={14} /> WhatsApp Number</label>
+            <input className={inputClass} value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="+20..." />
           </div>
           <div>
-            <label style={css.label}><Facebook size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> Facebook URL</label>
-            <input style={css.input} value={formData.facebook} onChange={e => setFormData({...formData, facebook: e.target.value})} />
+            <label className={labelClass}><Facebook size={14} /> Facebook URL</label>
+            <input className={inputClass} value={formData.facebook} onChange={e => setFormData({...formData, facebook: e.target.value})} placeholder="facebook.com/..." />
           </div>
-          <div>
-            <label style={css.label}><Instagram size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> Instagram URL</label>
-            <input style={css.input} value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} />
+          <div className="md:col-span-2 lg:col-span-1">
+            <label className={labelClass}><Instagram size={14} /> Instagram URL</label>
+            <input className={inputClass} value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="instagram.com/..." />
           </div>
         </div>
 
-        {/* BRANCH LOCATIONS */}
-        <div style={{ ...css.sectionLabel, marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Branch Locations
-          <button type="button" onClick={addLocation} style={{ backgroundColor: '#2563eb', color: '#fff', padding: '5px 15px', borderRadius: '6px', fontSize: '10px', border: 'none', cursor: 'pointer' }}>
+        {/* BRANCH LOCATIONS SECTION */}
+        <div className={`${sectionHeaderClass} mt-6`}>
+          <span>Branch Locations</span>
+          <button 
+            type="button" 
+            onClick={addLocation} 
+            className="bg-blue-600 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-[10px] font-black transition-colors"
+          >
             + ADD BRANCH
           </button>
         </div>
 
-        {formData.locations.map((loc, index) => (
-          <div key={index} style={css.locationCard}>
-            <button type="button" onClick={() => removeLocation(index)} style={{ position: 'absolute', top: '15px', right: '15px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <Trash2 size={20} />
-            </button>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-              <div>
-                <label style={css.label}>Branch Name (EN)</label>
-                <input style={css.input} value={loc.name.en} onChange={e => handleLocationChange(index, 'name', 'en', e.target.value)} />
-                <label style={css.label}>Full Address (EN)</label>
-                <input style={css.input} value={loc.address.en} onChange={e => handleLocationChange(index, 'address', 'en', e.target.value)} />
-              </div>
-              <div dir="rtl">
-                <label style={{ ...css.label, textAlign: 'right' }}>اسم الفرع (AR)</label>
-                <input style={{ ...css.input, textAlign: 'right' }} value={loc.name.ar} onChange={e => handleLocationChange(index, 'name', 'ar', e.target.value)} />
-                <label style={{ ...css.label, textAlign: 'right' }}>العنوان بالكامل (AR)</label>
-                <input style={{ ...css.input, textAlign: 'right' }} value={loc.address.ar} onChange={e => handleLocationChange(index, 'address', 'ar', e.target.value)} />
-              </div>
+        <div className="space-y-6">
+            {formData.locations.map((loc, index) => (
+            <div key={index} className="relative border-2 border-slate-200 p-6 md:p-8 rounded-2xl bg-slate-50 group hover:border-blue-300 transition-colors">
+                <button 
+                    type="button" 
+                    onClick={() => removeLocation(index)} 
+                    className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2 transition-colors"
+                >
+                    <Trash2 size={20} />
+                </button>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-6">
+                    {/* EN */}
+                    <div>
+                        <label className={labelClass}>Branch Name (EN)</label>
+                        <input className={inputClass} value={loc.name.en} onChange={e => handleLocationChange(index, 'name', 'en', e.target.value)} />
+                        <label className={labelClass}>Full Address (EN)</label>
+                        <input className={inputClass} value={loc.address.en} onChange={e => handleLocationChange(index, 'address', 'en', e.target.value)} />
+                    </div>
+                    {/* AR */}
+                    <div dir="rtl">
+                        <label className={`${labelClass} text-right`}><span className="hidden lg:inline-block"></span>اسم الفرع (AR)</label>
+                        <input className={`${inputClass} text-right`} value={loc.name.ar} onChange={e => handleLocationChange(index, 'name', 'ar', e.target.value)} />
+                        <label className={`${labelClass} text-right`}>العنوان بالكامل (AR)</label>
+                        <input className={`${inputClass} text-right`} value={loc.address.ar} onChange={e => handleLocationChange(index, 'address', 'ar', e.target.value)} />
+                    </div>
+                </div>
+
+                <label className={labelClass}><MapPin size={14} /> Google Maps URL</label>
+                <input 
+                    className={`${inputClass} mb-0`} 
+                    placeholder="https://goo.gl/maps/..." 
+                    value={loc.mapsUrl} 
+                    onChange={e => handleLocationChange(index, 'mapsUrl', null, e.target.value)} 
+                />
             </div>
-            <label style={css.label}><MapPin size={14} style={{marginRight: '8px', verticalAlign:'middle'}} /> Google Maps URL</label>
-            <input style={{ ...css.input, marginBottom: 0 }} placeholder="https://maps.google.com/..." value={loc.mapsUrl} onChange={e => handleLocationChange(index, 'mapsUrl', null, e.target.value)} />
-          </div>
-        ))}
+            ))}
+
+            {formData.locations.length === 0 && (
+                <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl">
+                    <MapPin className="mx-auto text-slate-300 mb-2" size={32} />
+                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No branch locations added</p>
+                </div>
+            )}
+        </div>
       </form>
     </div>
   );

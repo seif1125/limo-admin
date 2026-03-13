@@ -14,7 +14,6 @@ export default function DashboardPage() {
 
   useEffect(() => { loadData(); }, []);
 
-  // Multi-field search logic
   useEffect(() => {
     const results = requests.filter(req => 
       req.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,6 +26,7 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
+      // Ensure this endpoint is consistent with your backend
       const res = await api.get('/rentals'); 
       setRequests(res.data);
       const pending = res.data.filter(r => r.status === 'pending').length;
@@ -37,13 +37,18 @@ export default function DashboardPage() {
     } finally { setLoading(false); }
   };
 
-  const updateStatus = async (id, newStatus) => {
+  const updateStatus = async (id, currentStatus, newStatus) => {
+    // Prevent update if already active (per your request)
+    if (currentStatus === 'active') return;
+
     setActionLoading(true);
     try {
-      await api.put(`/reservations/status/${id}`, { status: newStatus });
+      // FIXED ENDPOINT: Ensure this matches your backend route exactly
+      // If /rentals is your GET, your PUT might be /rentals/status/:id or /reservations/status/:id
+      await api.put(`/rentals/status/${id}`, { status: newStatus });
       await loadData();
     } catch (err) {
-      alert(err.response?.data?.message || "Status update failed");
+      alert(err.response?.data?.message || "Status update failed (Check if route /api/rentals/status/:id exists)");
     } finally { setActionLoading(false); }
   };
 
@@ -51,131 +56,156 @@ export default function DashboardPage() {
     if (!window.confirm("Delete this reservation permanently?")) return;
     setActionLoading(true);
     try {
-      await api.delete(`/reservations/${id}`);
+      await api.delete(`/rentals/${id}`);
       await loadData();
     } catch (err) {
       alert("Delete failed");
     } finally { setActionLoading(false); }
   };
 
-  const css = {
-    page: { backgroundColor: '#f1f5f9', minHeight: '100vh', padding: '20px' },
-    container: { width: '100%', margin: '0 auto' },
-    header: { backgroundColor: '#ffffff', padding: '25px', borderRadius: '12px', border: '2px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' },
-    controlsRow: { display: 'flex', gap: '15px', marginBottom: '25px', alignItems: 'center' },
-    searchWrapper: { position: 'relative', flex: 1 },
-    searchInput: { width: '100%', padding: '12px 15px 12px 40px', borderRadius: '10px', border: '2px solid #cbd5e1', outline: 'none', fontSize: '14px', fontWeight: '600' },
-    addButton: { display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#000', color: '#fff', padding: '12px 20px', borderRadius: '10px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', border: 'none' },
-    statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '25px' },
-    statCard: { backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px', border: '2px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '15px' },
-    scrollWrapper: { width: '100%', overflowX: 'auto', backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #cbd5e1' },
-    table: { width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: '1500px', tableLayout: 'fixed' },
-    th: { backgroundColor: '#0f172a', color: '#ffffff', padding: '15px', textAlign: 'left', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', borderRight: '1px solid #1e293b' },
-    thContent: { display: 'flex', alignItems: 'center', gap: '8px' },
-    td: { padding: '12px 15px', borderBottom: '1px solid #e2e8f0', fontSize: '13px', color: '#000', fontWeight: '700', whiteSpace: 'nowrap' },
-    statusSelect: (status) => ({
-      padding: '6px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: '900',
-      backgroundColor: status === 'active' ? '#f0fdf4' : '#fffbeb',
-      color: status === 'active' ? '#166534' : '#92400e',
-      border: `1px solid ${status === 'active' ? '#bbf7d0' : '#fef3c7'}`,
-      cursor: 'pointer', outline: 'none', appearance: 'none', width: '100%', textAlign: 'center'
-    })
-  };
+  const thClass = "bg-slate-900 text-white p-4 text-[11px] font-black uppercase tracking-wider border-r border-slate-800";
+  const tdClass = "p-4 text-sm font-bold text-slate-900 border-b border-slate-200 whitespace-nowrap";
 
   if (loading) return <OverlayLoader message="Syncing Dashboard..." />;
 
   return (
-    <div style={css.page}>
+    <div className="bg-slate-100 min-h-screen p-4 md:p-8">
       {actionLoading && <OverlayLoader message="Updating..." />}
       
-      <div style={css.container}>
-        {/* Top Header */}
-        <div style={css.header}>
+      <div className="max-w-full mx-auto">
+        {/* Header Section */}
+        <div className="bg-white p-6 rounded-2xl border-2 border-slate-300 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6 shadow-sm">
           <div>
-            <h1 style={{ fontWeight: '900', fontSize: '24px', margin: 0, color:'black'}}>RESERVATIONS HUB</h1>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '12px', fontWeight: 'bold' }}>Live fleet management & bookings</p>
+            <h1 className="font-black text-2xl md:text-3xl text-slate-900 m-0 tracking-tighter uppercase tracking-widest">VIP Reservations</h1>
+            <p className="m-0 text-slate-500 text-xs font-bold tracking-widest mt-1 uppercase">Live Fleet & Booking Management</p>
           </div>
-          <button style={css.addButton} onClick={() => alert("Open Add Modal")}>
+          <button 
+            className="w-full lg:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-xl font-black text-xs hover:bg-blue-600 transition-all shadow-lg active:scale-95"
+            onClick={() => window.location.href = '/dashboard/reserve'}
+          >
             <Plus size={18} /> NEW RESERVATION
           </button>
         </div>
 
         {/* Search & Stats Row */}
-        <div style={css.controlsRow}>
-          <div style={css.searchWrapper}>
-            <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
+        <div className="flex flex-col xl:flex-row gap-4 mb-6">
+          <div className="relative flex-1 group">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
             <input 
               type="text" 
               placeholder="Search by name, email, phone or car..." 
-              style={css.searchInput}
+              className="w-full bg-white pl-12 pr-4 py-4 rounded-xl border-2 border-slate-300 outline-none font-bold text-sm text-slate-900 focus:border-slate-900 transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div style={{ ...css.statCard, padding: '10px 20px', minWidth: '180px' }}>
-            <Clock size={18} color="#92400e" />
-            <span style={{ fontSize: '12px', fontWeight: '800' }}>{stats.pending} PENDING</span>
-          </div>
-          <div style={{ ...css.statCard, padding: '10px 20px', minWidth: '180px' }}>
-            <CheckCircle size={18} color="#166534" />
-            <span style={{ fontSize: '12px', fontWeight: '800' }}>{stats.active} ACTIVE</span>
+          
+          <div className="flex gap-4 overflow-x-auto pb-2 md:pb-0">
+            <div className="bg-white px-6 py-4 rounded-xl border-2 border-slate-300 flex items-center gap-3 min-w-[160px] flex-1 md:flex-none shadow-sm">
+              <div className="bg-amber-100 p-2 rounded-lg"><Clock size={18} className="text-amber-700" /></div>
+              <span className="text-[11px] font-black text-slate-900 uppercase leading-none">{stats.pending} <br/><span className="text-slate-400 text-[9px]">Pending</span></span>
+            </div>
+            <div className="bg-white px-6 py-4 rounded-xl border-2 border-slate-300 flex items-center gap-3 min-w-[160px] flex-1 md:flex-none shadow-sm">
+              <div className="bg-emerald-100 p-2 rounded-lg"><CheckCircle size={18} className="text-emerald-700" /></div>
+              <span className="text-[11px] font-black text-slate-900 uppercase leading-none">{stats.active} <br/><span className="text-slate-400 text-[9px]">Active</span></span>
+            </div>
           </div>
         </div>
 
-        <div style={css.scrollWrapper}>
-          <table style={css.table}>
-            <thead>
-              <tr>
-                <th style={{ ...css.th, width: '280px' }}><div style={css.thContent}><User size={14} /> Customer</div></th>
-                <th style={{ ...css.th, width: '300px' }}><div style={css.thContent}><Phone size={14} /> Contact</div></th>
-                <th style={{ ...css.th, width: '140px' }}><div style={css.thContent}><Globe size={14} /> Nationality</div></th>
-                <th style={{ ...css.th, width: '200px' }}><div style={css.thContent}><Car size={14} /> Vehicle</div></th>
-                <th style={{ ...css.th, width: '250px' }}><div style={css.thContent}><Calendar size={14} /> Period</div></th>
-                <th style={{ ...css.th, width: '140px' }}><div style={css.thContent}><Activity size={14} /> Status</div></th>
-                <th style={{ ...css.th, width: '80px', borderRight: 'none', textAlign: 'center' }}>
-                   <div style={{...css.thContent, justifyContent:'center'}}><Settings size={14} /></div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((req) => (
-                <tr key={req._id}>
-                  <td style={css.td}>{req.customerName} <span style={{fontSize:'11px', color:'#64748b'}}>({req.email})</span></td>
-                  <td style={css.td}>{req.phone1} {req.phone2 && <span style={{color:'#cbd5e1'}}> | {req.phone2}</span>}</td>
-                  <td style={css.td}>{req.nationality}</td>
-                  <td style={css.td}>{req.car?.name?.en || 'N/A'}</td>
-                  <td style={css.td}>
-                    {new Date(req.fromDate).toLocaleDateString()} <span style={{color: '#94a3b8'}}>→</span> {new Date(req.toDate).toLocaleDateString()}
-                  </td>
-                  <td style={css.td}>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <select 
-                        value={req.status} 
-                        onChange={(e) => updateStatus(req._id, e.target.value)}
-                        style={css.statusSelect(req.status)}
-                      >
-                        <option value="pending">PENDING</option>
-                        <option value="active">ACTIVE</option>
-                      </select>
-                      <ChevronDown size={12} style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }} />
-                    </div>
-                  </td>
-                  <td style={{ ...css.td, textAlign: 'center' }}>
-                    <button onClick={() => deleteRes(req._id)} style={{ color: '#ef4444', cursor: 'pointer', background:'none', border:'none' }}>
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
+        {/* Data Table */}
+        <div className="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full border-collapse min-w-[1400px]">
+              <thead>
+                <tr>
+                  <th className={`${thClass} w-[280px]`}><div className="flex items-center gap-2"><User size={14} /> Customer</div></th>
+                  <th className={`${thClass} w-[300px]`}><div className="flex items-center gap-2"><Phone size={14} /> Contact</div></th>
+                  <th className={`${thClass} w-[140px]`}><div className="flex items-center gap-2"><Globe size={14} /> Nationality</div></th>
+                  <th className={`${thClass} w-[200px]`}><div className="flex items-center gap-2"><Car size={14} /> Vehicle</div></th>
+                  <th className={`${thClass} w-[250px]`}><div className="flex items-center gap-2"><Calendar size={14} /> Period</div></th>
+                  <th className={`${thClass} w-[160px]`}><div className="flex items-center gap-2"><Activity size={14} /> Status</div></th>
+                  <th className="bg-slate-900 text-white p-4 w-[80px] text-center"><Settings size={14} className="mx-auto" /></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredRequests.map((req) => (
+                  <tr key={req._id} className="hover:bg-slate-50 transition-colors">
+                    <td className={tdClass}>
+                      <div className="flex flex-col">
+                        <span>{req.customerName}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{req.email}</span>
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-100 px-2 py-1 rounded text-xs">{req.phone1}</span>
+                        {req.phone2 && <span className="text-slate-300 font-light">|</span>}
+                        {req.phone2 && <span className="text-slate-400 text-xs">{req.phone2}</span>}
+                      </div>
+                    </td>
+                    <td className={tdClass}>{req.nationality}</td>
+                    <td className={tdClass}>
+                      <span className="text-blue-600 font-black tracking-tight">{req.car?.name?.en || 'N/A'}</span>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="bg-slate-900 text-white px-2 py-1 rounded-md">{new Date(req.fromDate).toLocaleDateString()}</span>
+                        <span className="text-slate-300 font-black">→</span>
+                        <span className="bg-slate-900 text-white px-2 py-1 rounded-md">{new Date(req.toDate).toLocaleDateString()}</span>
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="relative group">
+                        <select 
+                          value={req.status} 
+                          disabled={req.status === 'active'} // Disable if already active
+                          onChange={(e) => updateStatus(req._id, req.status, e.target.value)}
+                          className={`w-full appearance-none px-4 py-2 rounded-lg text-[10px] font-black text-center outline-none border transition-all ${
+                            req.status === 'active' 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default shadow-none' 
+                              : 'bg-amber-50 text-amber-700 border-amber-200 cursor-pointer hover:bg-amber-100'
+                          }`}
+                        >
+                          <option value="pending">PENDING</option>
+                          <option value="active">SET AS ACTIVE</option>
+                        </select>
+                        {/* Only show the chevron if the user can actually interact with it */}
+                        {req.status !== 'active' && (
+                           <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <button 
+                        onClick={() => deleteRes(req._id)} 
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
           {filteredRequests.length === 0 && (
-            <div style={{ padding: '40px', textAlign: 'center', fontWeight: 'bold', color: '#64748b' }}>
-              No reservations found matching "{searchTerm}"
+            <div className="p-20 text-center flex flex-col items-center gap-4 bg-white">
+              <Search size={40} className="text-slate-200" />
+              <div className="flex flex-col gap-1">
+                <span className="text-slate-900 font-black uppercase tracking-widest text-sm">No reservations found</span>
+                <p className="text-slate-400 text-xs font-bold uppercase">Try searching for a different name, email, or car model.</p>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #ffffff; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+      `}</style>
     </div>
   );
 }

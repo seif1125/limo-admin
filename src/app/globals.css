@@ -1,4 +1,13 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add a fix for smooth transitions when sidebar opens/closes */
+@layer base {
+  body {
+    @apply antialiased text-slate-900;
+  }
+}
 
 :root {
   --background: #ffffff;
