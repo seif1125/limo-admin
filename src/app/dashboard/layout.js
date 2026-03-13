@@ -20,7 +20,7 @@ const handleLogout = () => {
         
         <nav className="flex-1 p-4 space-y-2">
           <NavItem href="/dashboard" icon={<LayoutDashboard size={20}/>} label="Dashboard" />
-          <NavItem href="/dashboard/cars" icon={<Car size={20}/>} label="Fleet" />
+          <NavItem href="/dashboard/fleet" icon={<Car size={20}/>} label="Fleet" />
           <NavItem href="/dashboard/banners" icon={<ImageIcon size={20}/>} label="Banners" />
           <NavItem href="/dashboard/testimonials" icon={<MessageSquare size={20}/>} label="Reviews" />
           <NavItem href="/dashboard/contact" icon={<Settings size={20}/>} label="Contact Info" />
@@ -34,7 +34,10 @@ const handleLogout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-64 p-8" style={{
+    "width": "100%",
+    "overflowX": "hidden"
+}}>
         {children}
       </main>
     </div>

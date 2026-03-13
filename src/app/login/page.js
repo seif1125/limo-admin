@@ -1,80 +1,154 @@
 "use client";
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { Lock, User, Loader2 } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Car, ShieldCheck, LogIn, UserPlus } from 'lucide-react';
+import OverlayLoader from '@/components/loader';
+import { useRouter } from 'next/navigation';
 
-export default function LoginPage() {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true); // Toggles between Login and Register
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
   const router = useRouter();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-
+    
     try {
-      const res = await api.post('/auth/login', formData);
-      // Save the token for the interceptor to use
-      localStorage.setItem('adminToken', res.data.token);
-      // Redirect to the dashboard
-      router.push('/dashboard');
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const res = await api.post(endpoint, formData);
+      
+      if (isLogin) {
+        // 1. Save Token to LocalStorage
+     
+        
+        // 2. Set Default Authorization Header for future API calls
+        api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        
+
+  localStorage.setItem('user', JSON.stringify(res.data.user)); // Optional: Store user info for easy access
+
+ 
+        // 3. Redirect to Dashboard
+        router.push('/dashboard');
+      } else {
+        // 1. Success in Register: Show success message
+        alert("Registration successful! Please login.");
+        
+        // 2. Switch to Login Tab
+        setIsLogin(true);
+        
+        // 3. Clear sensitive fields but keep email for convenience
+        setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+        setLoading(false);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
+      const errorMsg = err.response?.data?.message || "Authentication failed";
+      alert(errorMsg);
       setLoading(false);
     }
   };
 
+  const css = {
+    page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9', padding: '20px' },
+    card: { backgroundColor: '#ffffff', width: '100%', maxWidth: '450px', borderRadius: '16px', border: '2px solid #cbd5e1', padding: '40px', textAlign: 'center' },
+    tabContainer: { display: 'flex', backgroundColor: '#f8fafc', padding: '5px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '30px' },
+    tab: (active) => ({
+      flex: 1, padding: '10px', borderRadius: '8px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', border: 'none',
+      backgroundColor: active ? '#0f172a' : 'transparent',
+      color: active ? '#fff' : '#64748b',
+      transition: 'all 0.2s',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+    }),
+    inputGroup: { position: 'relative', marginBottom: '18px', textAlign: 'left' },
+    label: { display: 'block', fontSize: '11px', fontWeight: '800', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase' },
+    input: { width: '100%', padding: '12px 15px 12px 42px', borderRadius: '10px', border: '2px solid #e2e8f0', outline: 'none', fontSize: '14px', fontWeight: '600', color: '#000' },
+    icon: { position: 'absolute', left: '14px', top: '35px', color: '#94a3b8' },
+    submitBtn: { width: '100%', padding: '14px', backgroundColor: '#000', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '900', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '10px' },
+    footerLink: { marginTop: '20px', fontSize: '13px', fontWeight: '700', color: '#64748b', cursor: 'pointer', textDecoration: 'underline', background: 'none', border: 'none' }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="bg-black p-8 text-center text-white">
-          <h1 className="text-2xl font-bold tracking-[0.2em] uppercase">Monochrome</h1>
-          <p className="text-slate-400 text-xs mt-2 font-light">ADMINISTRATOR PORTAL</p>
+    <div style={css.page}>
+      {loading && <OverlayLoader message={isLogin ? "Signing in..." : "Creating account..."} />}
+      
+      <div style={css.card}>
+        {/* Brand Icon */}
+        <div style={{ display: 'inline-flex', padding: '12px', backgroundColor: '#0f172a', borderRadius: '12px', color: '#fff', marginBottom: '15px' }}>
+          <Car size={32} />
+        </div>
+        
+        <h1 style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', margin: '0 0 5px 0' }}>RESERVATIONS HUB</h1>
+        <p style={{ color: '#64748b', fontSize: '13px', fontWeight: '600', marginBottom: '25px' }}>Management Portal v2.0</p>
+
+        {/* Login/Register Tabs */}
+        <div style={css.tabContainer}>
+          <button style={css.tab(isLogin)} onClick={() => setIsLogin(true)}>
+            <LogIn size={14} /> LOGIN
+          </button>
+          <button style={css.tab(!isLogin)} onClick={() => setIsLogin(false)}>
+            <UserPlus size={14} /> REGISTER
+          </button>
         </div>
 
-        <form onSubmit={handleLogin} className="p-8 space-y-6">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 text-center">
-              {error}
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div style={css.inputGroup}>
+              <label style={css.label}>Full Name</label>
+              <User style={css.icon} size={18} />
+              <input 
+                type="text" placeholder="John Doe" style={css.input} required 
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
             </div>
           )}
 
-          <div className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-3 top-3 text-slate-400" size={20} />
-              <input
-                type="text"
-                placeholder="Username"
-                required
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-black outline-none transition"
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-400" size={20} />
-              <input
-                type="password"
-                placeholder="Password"
-                required
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-black outline-none transition"
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
+          <div style={css.inputGroup}>
+            <label style={css.label}>Email Address</label>
+            <Mail style={css.icon} size={18} />
+            <input 
+              type="email" placeholder="admin@fleet.com" style={css.input} required 
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+            />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition flex items-center justify-center gap-2"
-          >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : "SIGN IN"}
+          <div style={css.inputGroup}>
+            <label style={css.label}>Password</label>
+            <Lock style={css.icon} size={18} />
+            <input 
+              type="password" placeholder="••••••••" style={css.input} required 
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+            />
+          </div>
+
+          {!isLogin && (
+            <div style={css.inputGroup}>
+              <label style={css.label}>Confirm Password</label>
+              <Lock style={css.icon} size={18} />
+              <input 
+                type="password" placeholder="••••••••" style={css.input} required 
+                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              />
+            </div>
+          )}
+
+          <button style={css.submitBtn} type="submit">
+            {isLogin ? "ACCESS DASHBOARD" : "CREATE ACCOUNT"} <ArrowRight size={18} />
           </button>
         </form>
+
+        {isLogin && (
+          <button style={css.footerLink} onClick={() => window.location.href = '/forgot-password'}>
+            Forgot password?
+          </button>
+        )}
+      </div>
+
+      {/* Security Footer */}
+      <div style={{ position: 'fixed', bottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '11px', fontWeight: '800' }}>
+        <ShieldCheck size={14} /> ENCRYPTED SESSION
       </div>
     </div>
   );
