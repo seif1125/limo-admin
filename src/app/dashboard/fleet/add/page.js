@@ -1,8 +1,8 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Upload, X, DollarSign, Car } from 'lucide-react';
+import { ArrowLeft, Upload, X, Save, Clock, ShieldCheck, Gauge, Info } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -10,198 +10,235 @@ export default function AddCarPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  const [images, setImages] = useState([]); 
+  const [categories, setCategories] = useState([]);
+  const [localImages, setLocalImages] = useState([]); 
 
   const [formData, setFormData] = useState({
-    name: { en: '', ar: '' },
-    make: { en: '', ar: '' },
-    model: { en: '', ar: '' },
-    description: { en: '', ar: '' },
-    year: '',
-    priceUsd: '',
-    priceEgp: '',
+    name: '', model: '', year: new Date().getFullYear(),
+    category: '', price: '', description: '',
+    rentalOptions: {
+      isFullDayRental: false,
+      isStandardRental: true,
+      fullDayHours: 12,
+      limitKilometers: 100,
+      extraKmCost: '',
+      extraHourCost: ''
+    },
+    specs: { passengers: 4, luggage: 2, wifi: true, leatherSeats: true, fourWheel: false, gps: true, climateControl: true }
   });
 
-  const handleMultipleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    if (images.length + files.length > 3) {
-      alert("Maximum 3 images allowed.");
-      return;
+  useEffect(() => {
+    api.get('/categories').then(res => setCategories(res.data));
+  }, []);
+
+  // VALIDATION: Checks base fields + conditional fields if Full Day is enabled
+  const isFormValid = useMemo(() => {
+    const baseValid = formData.name && formData.category && formData.price && localImages.length > 0;
+    
+    if (formData.rentalOptions.isFullDayRental) {
+      const { fullDayHours, limitKilometers, extraKmCost, extraHourCost } = formData.rentalOptions;
+      return baseValid && fullDayHours > 0 && limitKilometers > 0 && extraKmCost !== '' && extraHourCost !== '';
     }
-
-    setLoading(true);
-    setStatusMessage(`Uploading assets to Cloudinary...`);
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    const uploadedUrls = [];
-
-    try {
-      for (const file of files) {
-        const data = new FormData();
-        data.append("file", file);
-        data.append("upload_preset", uploadPreset);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: "POST",
-          body: data
-        });
-        const fileData = await res.json();
-        if (fileData.secure_url) uploadedUrls.push(fileData.secure_url);
-      }
-      setImages((prev) => [...prev, ...uploadedUrls]);
-    } catch (err) {
-      alert("Upload failed. Check your Cloudinary credentials.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
+    
+    return baseValid;
+  }, [formData, localImages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (images.length === 0) return alert("Please upload at least one image");
-
     setLoading(true);
-    setStatusMessage("Syncing with Database...");
+    setStatusMessage("Uploading assets...");
 
     try {
-      const payload = { 
-        ...formData, 
-        images: images,
-        year: Number(formData.year),
-        priceUsd: Number(formData.priceUsd),
-        priceEgp: Number(formData.priceEgp)
-      };
+      const uploadedUrls = [];
+      for (let img of localImages) {
+        const data = new FormData();
+        data.append("file", img.file);
+        data.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: "POST", body: data });
+        const fileData = await res.json();
+        uploadedUrls.push(fileData.secure_url);
+      }
 
-      await api.post('/cars', payload);
+      setStatusMessage("Saving to database...");
+      await api.post('/cars', { 
+        ...formData, 
+        images: uploadedUrls,
+        price: Number(formData.price),
+        rentalOptions: {
+          ...formData.rentalOptions,
+          fullDayHours: Number(formData.rentalOptions.fullDayHours),
+          limitKilometers: Number(formData.rentalOptions.limitKilometers),
+          extraKmCost: Number(formData.rentalOptions.extraKmCost),
+          extraHourCost: Number(formData.rentalOptions.extraHourCost),
+        }
+      });
       router.push('/dashboard/fleet');
-    } catch (err) {
-      alert("Failed to save. Check if all required fields are filled.");
-    } finally {
-      setLoading(false);
+    } catch (err) { 
+      alert("Error saving car. Check all required fields."); 
+    } finally { 
+      setLoading(false); 
     }
   };
 
-  // Reusable Tailwind classes
-  const labelClass = "block text-slate-900 font-extrabold text-[13px] mb-2";
-  const inputClass = "w-full p-3.5 rounded-lg border-2 border-slate-300 focus:border-black outline-none transition-all text-slate-900 font-semibold mb-5 placeholder:text-slate-400";
-  const sectionHeaderClass = "text-blue-600 font-black text-[11px] mb-6 border-b-2 border-slate-100 pb-2 uppercase flex items-center gap-2 tracking-widest";
+  const inputClass = "w-full p-3.5 rounded-xl border-2 border-slate-200 focus:border-blue-600 outline-none mb-4 font-bold text-slate-900 transition-all";
+  const labelClass = "block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest";
 
   return (
-    <div className="bg-slate-100 min-h-screen p-4 md:py-10 md:px-6">
+    <div className="bg-slate-100 min-h-screen p-4 md:p-10">
       {loading && <OverlayLoader message={statusMessage} />}
       
-      <div className="bg-white p-6 md:p-10 rounded-2xl border-2 border-slate-300 max-w-[1100px] mx-auto shadow-xl">
-        <Link href="/dashboard/fleet" className="text-blue-600 font-extrabold flex items-center gap-1 mb-6 no-underline text-xs hover:text-slate-800 transition">
-          <ArrowLeft size={16} /> RETURN TO LIST
+      <div className="max-w-5xl mx-auto bg-white p-8 md:p-12 rounded-3xl border-2 border-slate-300 shadow-2xl">
+        <Link href="/dashboard/fleet" className="flex items-center gap-1 text-xs font-black text-slate-400 uppercase mb-8 hover:text-blue-600 transition-colors">
+          <ArrowLeft size={16}/> Back to Inventory
         </Link>
-
-        <h1 className="font-black text-2xl md:text-4xl text-slate-900 mb-10 tracking-tighter">
-          REGISTER NEW VEHICLE
-        </h1>
+        
+        <h1 className="text-4xl font-black tracking-tighter uppercase mb-10 text-slate-900">Add New Vehicle</h1>
 
         <form onSubmit={handleSubmit}>
-          
-          {/* MEDIA UPLOAD SECTION */}
-          <div className={sectionHeaderClass}><Upload size={14}/> Vehicle Media Assets ({images.length}/3)</div>
-          
-          <label className="block border-4 border-dashed border-blue-600 p-6 md:p-10 rounded-2xl text-center bg-blue-50 cursor-pointer hover:bg-blue-100 transition group">
-            <input type="file" multiple disabled={images.length >= 3} onChange={handleMultipleImageUpload} className="hidden" accept="image/*" />
-            <Upload size={36} className="mx-auto mb-3 text-blue-600 group-hover:scale-110 transition-transform" />
-            <p className="font-black text-sm md:text-base text-slate-900 m-0 uppercase">
-              {images.length >= 3 ? "Upload Limit Reached" : "Click to Upload Car Photos"}
-            </p>
-            <p className="text-xs text-slate-500 mt-2 font-bold uppercase tracking-tight">Attach up to 3 high-resolution images</p>
-          </label>
-
-          {/* THUMBNAIL GRID */}
-          <div className="flex flex-wrap gap-4 mt-6 mb-10">
-            {images.map((url, i) => (
-              <div key={i} className="relative w-full sm:w-[150px] h-[100px] border-2 border-blue-600 rounded-xl overflow-hidden shadow-md">
-                <img src={url} className="w-full h-full object-cover" alt="Preview" />
-                <button 
-                  type="button" 
-                  onClick={() => removeImage(i)} 
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition shadow-lg"
-                >
-                  <X size={14} strokeWidth={3} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* BILINGUAL SPECIFICATIONS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            
-            {/* ENGLISH SECTION */}
+          {/* SECTION: BASIC INFO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
-              <p className={sectionHeaderClass}>English Specification</p>
-              <label className={labelClass}>Display Name</label>
-              <input className={inputClass} required value={formData.name.en} onChange={(e) => setFormData({...formData, name: {...formData.name, en: e.target.value}})} placeholder="e.g. Rolls Royce Phantom" />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
-                <div>
-                  <label className={labelClass}>Make</label>
-                  <input className={inputClass} required value={formData.make.en} onChange={(e) => setFormData({...formData, make: {...formData.make, en: e.target.value}})} placeholder="Rolls Royce" />
-                </div>
-                <div>
-                  <label className={labelClass}>Model</label>
-                  <input className={inputClass} required value={formData.model.en} onChange={(e) => setFormData({...formData, model: {...formData.model, en: e.target.value}})} placeholder="Phantom" />
-                </div>
+              <label className={labelClass}>Vehicle Category</label>
+              <select required className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                <option value="">Select Category</option>
+                {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelClass}>Vehicle Name</label><input className={inputClass} required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="S-Class" /></div>
+                <div><label className={labelClass}>Sub-Model</label><input className={inputClass} required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="S580" /></div>
               </div>
 
-              <label className={labelClass}>Description</label>
-              <textarea className={`${inputClass} h-32 resize-none`} value={formData.description.en} onChange={(e) => setFormData({...formData, description: {...formData.description, en: e.target.value}})} placeholder="Brief overview of vehicle features..." />
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelClass}>Year</label><input type="number" className={inputClass} value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} /></div>
+                <div><label className={labelClass}>Base Price ($)</label><input type="number" className={inputClass} value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} /></div>
+              </div>
             </div>
 
-            {/* ARABIC SECTION */}
-            <div dir="rtl">
-              <p className={`${sectionHeaderClass} flex-row-reverse`}>التفاصيل العربية</p>
-              <label className={`${labelClass} text-right`}>اسم العرض</label>
-              <input className={`${inputClass} text-right`} required value={formData.name.ar} onChange={(e) => setFormData({...formData, name: {...formData.name, ar: e.target.value}})} placeholder="مثال: رولز رويس فانتوم" />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5">
-                <div>
-                  <label className={`${labelClass} text-right`}>الماركة</label>
-                  <input className={`${inputClass} text-right`} required value={formData.make.ar} onChange={(e) => setFormData({...formData, make: {...formData.make, ar: e.target.value}})} />
-                </div>
-                <div>
-                  <label className={`${labelClass} text-right`}>الموديل</label>
-                  <input className={`${inputClass} text-right`} required value={formData.model.ar} onChange={(e) => setFormData({...formData, model: {...formData.model, ar: e.target.value}})} />
-                </div>
-              </div>
-
-              <label className={`${labelClass} text-right`}>الوصف</label>
-              <textarea className={`${inputClass} text-right h-32 resize-none`} value={formData.description.ar} onChange={(e) => setFormData({...formData, description: {...formData.description, ar: e.target.value}})} placeholder="موجز عن مميزات السيارة..." />
+            <div>
+              <label className={labelClass}>Internal Description</label>
+              <textarea className={`${inputClass} h-[195px] resize-none`} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="High-end executive sedan..." />
             </div>
           </div>
 
-          {/* PRICING SECTION */}
-          <div className="mt-8 bg-slate-50 p-6 md:p-8 rounded-xl border-2 border-slate-200">
-            <p className={`${sectionHeaderClass} border-none mb-4`}><DollarSign size={14}/> Logistics & Pricing</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <label className={labelClass}>Manufacture Year</label>
-                <input type="number" className={`${inputClass} mb-0`} required value={formData.year} onChange={(e) => setFormData({...formData, year: e.target.value})} placeholder="2024" />
+          {/* SECTION: RENTAL SERVICES */}
+          <div className="mb-10 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+            <h3 className="text-[11px] font-black uppercase text-blue-600 mb-6 flex items-center gap-2">
+              <ShieldCheck size={16}/> Service Availability & Constraints
+            </h3>
+            
+            <div className="flex gap-8 mb-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isStandardRental} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isStandardRental: e.target.checked}})} />
+                <span className="font-black text-xs uppercase text-slate-700">Standard Rental</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isFullDayRental} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isFullDayRental: e.target.checked}})} />
+                <span className="font-black text-xs uppercase text-slate-700 text-blue-600">Full Day Package</span>
+              </label>
+            </div>
+
+            {formData.rentalOptions.isFullDayRental && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
+               <div>
+    <label className={labelClass}>Included Hours</label>
+    <input 
+        type="number" 
+        min={1} 
+        max={24} 
+        className={inputClass} 
+        // Use || '' to ensure it's never undefined
+        value={formData.rentalOptions?.fullDayHours || ''} 
+        onChange={e => setFormData({
+            ...formData, 
+            rentalOptions: {...formData.rentalOptions, fullDayHours: e.target.value}
+        })} 
+    />
+</div>
+
+{/* Included KM */}
+<div>
+    <label className={labelClass}>Included KM</label>
+    <input 
+        type="number" 
+        min={0}
+        className={inputClass} 
+        value={formData.rentalOptions?.limitKilometers || ''} 
+        onChange={e => setFormData({
+            ...formData, 
+            rentalOptions: {...formData.rentalOptions, limitKilometers: e.target.value}
+        })} 
+    />
+</div>
+
+{/* Extra Hour Cost */}
+<div>
+    <label className={labelClass}>Extra Hour $</label>
+    <input 
+        type="number" 
+        min={0}
+        className={inputClass} 
+        value={formData.rentalOptions?.extraHourCost || ''} 
+        onChange={e => setFormData({
+            ...formData, 
+            rentalOptions: {...formData.rentalOptions, extraHourCost: e.target.value}
+        })} 
+    />
+</div>
+
+{/* Extra KM Cost */}
+<div>
+    <label className={labelClass}>Extra KM $</label>
+    <input 
+        type="number" 
+        min={0}
+        className={inputClass} 
+        value={formData.rentalOptions?.extraKmCost || ''} 
+        onChange={e => setFormData({
+            ...formData, 
+            rentalOptions: {...formData.rentalOptions, extraKmCost: e.target.value}
+        })} 
+    />
+</div>
               </div>
-              <div>
-                <label className={labelClass}>Price / Day (USD)</label>
-                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceUsd} onChange={(e) => setFormData({...formData, priceUsd: e.target.value})} placeholder="150" />
-              </div>
-              <div>
-                <label className={labelClass}>Price / Day (EGP)</label>
-                <input type="number" className={`${inputClass} mb-0`} required value={formData.priceEgp} onChange={(e) => setFormData({...formData, priceEgp: e.target.value})} placeholder="7500" />
+            )}
+          </div>
+
+          {/* SECTION: IMAGES */}
+          <div className="mb-10">
+            <label className={labelClass}>Media Assets ({localImages.length}/3)</label>
+            <div className="border-4 border-dashed border-slate-200 p-8 rounded-2xl text-center hover:bg-slate-50 transition-colors">
+              <input type="file" multiple className="hidden" id="car-files" onChange={e => {
+                const files = Array.from(e.target.files).map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+                if (localImages.length + files.length > 3) return alert("Max 3 photos");
+                setLocalImages([...localImages, ...files]);
+              }} />
+              <label htmlFor="car-files" className="cursor-pointer flex flex-col items-center gap-2">
+                <Upload className="text-blue-600" size={32} />
+                <span className="font-black text-sm uppercase text-slate-900">Upload Gallery Photos</span>
+              </label>
+              
+              <div className="flex justify-center gap-4 mt-6">
+                {localImages.map((img, i) => (
+                  <div key={i} className="relative group">
+                    <img src={img.preview} className="w-24 h-24 object-cover rounded-xl border-2 border-blue-600 shadow-md" />
+                    <button type="button" onClick={() => setLocalImages(localImages.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-transform">
+                      <X size={12} strokeWidth={4}/>
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <button type="submit" className="w-full bg-slate-900 text-white p-5 rounded-xl font-black text-lg tracking-widest mt-10 hover:bg-blue-600 transition-colors uppercase shadow-lg">
-            SUBMIT TO FLEET INVENTORY
+          <button 
+            disabled={!isFormValid || loading} 
+            className={`w-full p-6 rounded-2xl font-black uppercase tracking-widest text-lg transition-all shadow-xl flex items-center justify-center gap-3
+              ${isFormValid ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+            `}
+          >
+            <Save size={20}/> {loading ? "Saving..." : "Add to Inventory"}
           </button>
         </form>
       </div>

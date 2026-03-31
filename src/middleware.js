@@ -1,9 +1,24 @@
+// middleware.js (in your root or /src folder)
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // We can't access localStorage in Middleware (server-side),
-  // but we can check for a cookie if you decide to store the token there.
-  // For now, client-side protection in page.js is usually enough for a simple admin panel.
-  
+  const token = request.cookies.get('adminToken')?.value;
+  const { pathname } = request.nextUrl;
+
+  // 1. If NOT logged in and trying to access /dashboard -> Redirect to /login
+  if (!token && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // 2. If LOGGED in and trying to access /login -> Redirect to /dashboard
+  if (token && pathname === '/login') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
   return NextResponse.next();
 }
+
+// Specify which routes this middleware should run on
+export const config = {
+  matcher: ['/dashboard/:path*', '/login'],
+};
