@@ -19,22 +19,26 @@ export default function EditTestimonialPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   
   const [formData, setFormData] = useState({
-    name: '',
-    title: '',
-    comment: '',
+    name_ar: '',
+    name_en: '',
+    title_ar: '',
+    title_en: '',
+    comment_ar: '',
+    comment_en: '',
     rating: 5,
-    origin: ''
+    origin_ar: '',
+    origin_en: ''
   });
 
   useEffect(() => {
     api.get(`/testimonials/${id}`).then(res => {
       const data = res.data;
       const cleanData = {
-        name: data.name || '',
-        title: data.title || '',
-        comment: data.comment || '',
+        name_en: data.name_en || '', name_ar: data.name_ar || '',
+        title_en: data.title_en || '', title_ar: data.title_ar || '',
+        comment_en: data.comment_en || '', comment_ar: data.comment_ar || '',
         rating: data.rating || 5,
-        origin: data.origin || ''
+        origin_en: data.origin_en || '', origin_ar: data.origin_ar || ''
       };
       setFormData(cleanData);
       setImage(data.image || "");
@@ -45,7 +49,7 @@ export default function EditTestimonialPage() {
 
   // Logic to disable button if fields are empty OR nothing changed
   const isButtonDisabled = useMemo(() => {
-    const isMissingFields = !formData.name.trim() || !formData.title.trim() || !formData.comment.trim();
+    const isMissingFields = !formData.name_en.trim() || !formData.title_en.trim() || !formData.comment_en.trim()|| !formData.name_ar.trim() || !formData.title_ar.trim() || !formData.comment_ar.trim();
     const currentDataState = JSON.stringify({ ...formData, image });
     const hasNoChanges = currentDataState === initialData && !selectedFile;
 
@@ -122,33 +126,33 @@ export default function EditTestimonialPage() {
         </div>
 
         {/* Form Fields */}
+      
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-          <div>
-            <label className={labelClass}>Full Name</label>
-            <input className={inputClass} required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          </div>
-          <div>
-            <label className={labelClass}>Company / Title</label>
-            <input className={inputClass} required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-          </div>
-        </div>
+  <div>
+    <label className={labelClass}>Full Name (EN)</label>
+    <input className={inputClass} required value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} />
+  </div>
+  <div>
+    <label className={labelClass}>Full Name (AR)</label>
+    <input className={inputClass} dir="rtl" required value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} />
+  </div>
+</div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-          <div>
-            <label className={labelClass}>Origin</label>
-            <input className={inputClass} value={formData.origin} onChange={e => setFormData({...formData, origin: e.target.value})} />
-          </div>
-          <div>
-            <label className={labelClass}>Rating</label>
-            <select className={inputClass} value={formData.rating} onChange={e => setFormData({...formData, rating: Number(e.target.value)})}>
-              {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Stars</option>)}
-            </select>
-          </div>
-        </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+  <div>
+    <label className={labelClass}>Title (EN)</label>
+    <input className={inputClass} required value={formData.title_en} onChange={e => setFormData({...formData, title_en: e.target.value})} />
+  </div>
+  <div>
+    <label className={labelClass}>Title (AR)</label>
+    <input className={inputClass} dir="rtl" required value={formData.title_ar} onChange={e => setFormData({...formData, title_ar: e.target.value})} />
+  </div>
+</div>
 
-        <label className={labelClass}>Comment</label>
-        <textarea className={`${inputClass} h-32 resize-none`} required value={formData.comment} onChange={e => setFormData({...formData, comment: e.target.value})} />
-
+<label className={labelClass}>Comment (EN)</label>
+<textarea className={`${inputClass} h-24`} required value={formData.comment_en} onChange={e => setFormData({...formData, comment_en: e.target.value})} />
+<label className={labelClass}>Comment (AR)</label>
+<textarea className={`${inputClass} h-24`} dir="rtl" required value={formData.comment_ar} onChange={e => setFormData({...formData, comment_ar: e.target.value})} />
         {/* Save Button (Back at the bottom) */}
         <button 
             type="submit" 

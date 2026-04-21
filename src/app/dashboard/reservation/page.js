@@ -141,15 +141,20 @@ export default function AddReservationPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    
+   
     try {
-      await api.post('/rentals', { ...formData, totalPrice: totalGross, cashRemain: remainingBalance });
+      await fetch('/rentals', {
+        method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, totalPrice: totalGross, cashRemain: remainingBalance })
+      });
+
       router.push('/dashboard');
     } catch (err) { 
       alert("Error saving log"); 
     } finally { 
-      setLoading(false); 
+       
     }
   };
 

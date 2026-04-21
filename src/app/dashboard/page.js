@@ -125,6 +125,8 @@ export default function DashboardPage() {
                 <tr>
                   <th className={`${thClass} w-[280px]`}>VIP Profile</th>
                   <th className={`${thClass} w-[220px]`}>Reserved Package</th>
+                  <th className={`${thClass} w-[280px]`}>Dispatch: Pickup</th>
+                <th className={`${thClass} w-[280px]`}>Dispatch: Dropoff</th>
                   <th className={`${thClass} w-[220px]`}>Base Rate Audit</th>
                   <th className={`${thClass} w-[300px]`}>KM Surcharge Audit</th>
                   <th className={`${thClass} w-[300px]`}>Hour Surcharge Audit</th>
@@ -166,6 +168,43 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </td>
+                      {/* NEW 2.1: PICKUP LOCATION */}
+<td className={tdClass}>
+  <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+    <div className="flex items-start gap-2">
+      <MapPin size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+      <span className="text-[10px] font-black leading-tight text-slate-700 whitespace-normal line-clamp-2">
+        {req.pickupLocation?.address || "N/A"}
+      </span>
+    </div>
+    <a 
+      href={`https://www.google.com/maps?q=${req.pickupLocation?.lat},${req.pickupLocation?.lng}`}
+      target="_blank"
+      className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 py-1.5 rounded-lg text-[9px] font-black text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all"
+    >
+      <ExternalLink size={10} /> VIEW ON MAP
+    </a>
+  </div>
+</td>
+
+{/* NEW 2.2: DROPOFF LOCATION */}
+<td className={tdClass}>
+  <div className="flex flex-col gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+    <div className="flex items-start gap-2">
+      <Navigation size={14} className="text-rose-600 mt-0.5 shrink-0" />
+      <span className="text-[10px] font-black leading-tight text-slate-700 whitespace-normal line-clamp-2">
+        {req.dropoffLocation?.address || "N/A"}
+      </span>
+    </div>
+    <a 
+      href={`https://www.google.com/maps?q=${req.dropoffLocation?.lat},${req.dropoffLocation?.lng}`}
+      target="_blank"
+      className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 py-1.5 rounded-lg text-[9px] font-black text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all"
+    >
+      <ExternalLink size={10} /> VIEW ON MAP
+    </a>
+  </div>
+</td>
 
                       {/* 3. Base Rate Audit */}
                       <td className={tdClass}>
@@ -285,7 +324,7 @@ export default function DashboardPage() {
                       {/* Action Cell */}
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-3">
-                            {/* <Link href={`/dashboard/rentals/edit/${req._id}`} className="p-2.5 bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm">
+                            {/* <Link href={`/dashboard/reservation/edit/${req._id}`} className="p-2.5 bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Pencil size={16} strokeWidth={2.5}/>
                             </Link> */}
                             <button onClick={() => deleteRes(req._id)} className="p-2.5 bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm">

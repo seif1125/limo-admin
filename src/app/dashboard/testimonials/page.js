@@ -75,15 +75,15 @@ export default function TestimonialsPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <p className="font-black text-slate-900 text-sm m-0">{item.name}</p>
-                        <p className="text-blue-600 text-[10px] font-bold uppercase m-0">{item.title}</p>
-                        <p className="text-slate-400 text-[9px] font-bold flex items-center gap-1 uppercase mt-1">
-                          <Globe size={10} /> {item.origin || 'Global'}
-                        </p>
-                      </td>
-                      <td className="p-4 text-sm text-slate-600 max-w-[300px] italic">
-                        "{item.comment.substring(0, 80)}..."
-                      </td>
+  <p className="font-black text-slate-900 text-sm m-0">{item.name_en} / {item.name_ar}</p>
+  <p className="text-blue-600 text-[10px] font-bold uppercase m-0">{item.title_en} / {item.title_ar}</p>
+  <p className="text-slate-400 text-[9px] font-bold flex items-center gap-1 uppercase mt-1">
+    <Globe size={10} /> {item.origin_en || 'Global'}/{item.origin_ar || 'عالمي'}
+  </p>
+</td>
+<td className="p-4 text-sm text-slate-600 max-w-[300px] italic">
+  "{item.comment_en.substring(0, 50)}..."<br/> "{item.comment_ar.substring(0, 50)}..."
+</td>
                       <td className="p-4 text-center">
                         <div className="flex justify-center text-amber-500">
                           {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}

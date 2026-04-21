@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, use } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Save, X, Upload, CheckCircle, ShieldCheck, Clock, Gauge } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, CheckCircle, ShieldCheck, Star, Eye, EyeOff, Settings2, Clock } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -10,62 +10,52 @@ export default function EditCarPage({ params }) {
   const { id } = use(params);
   const router = useRouter();
 
-  // Loading & UI States
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
   const [categories, setCategories] = useState([]);
-
-  // Data States
+  
   const [originalSnapshot, setOriginalSnapshot] = useState("");
+  const [existingImages, setExistingImages] = useState([]);
+  const [newFiles, setNewFiles] = useState([]);
+
   const [formData, setFormData] = useState({
-    name: '', model: '', year: '', category: '', price: '', description: '',
+    name_en: '', name_ar: '',
+    model_en: '', model_ar: '',
+    description_en: '', description_ar: '',
+    year: new Date().getFullYear(),
+    category: '', price: '',
+    featured: false, isAvailable: true,
     rentalOptions: {
-      isFullDayRental: false,
-      isStandardRental: true,
-      fullDayHours: 12,
-      limitKilometers: 100,
-      extraKmCost: '',
-      extraHourCost: ''
+      isFullDayRental: false, isStandardRental: true,
+      fullDayHours: 12, limitKilometers: 100, extraKmCost: '', extraHourCost: ''
     },
     specs: { passengers: 4, luggage: 2, wifi: true, fourWheel: false, gps: true, leatherSeats: true, climateControl: true }
   });
 
-  // Image Management
-  const [existingImages, setExistingImages] = useState([]);
-  const [newFiles, setNewFiles] = useState([]);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [carRes, catRes] = await Promise.all([
-          api.get(`/cars/${id}`),
-          api.get('/categories')
-        ]);
-
+        const [carRes, catRes] = await Promise.all([api.get(`/cars/${id}`), api.get('/categories')]);
         const car = carRes.data;
-        const initialForm = {
-          name: car.name || '',
-          model: car.model || '',
-          year: String(car.year) || '',
+        
+        const cleanedData = {
+          name_en: car.name_en || '', name_ar: car.name_ar || '',
+          model_en: car.model_en || '', model_ar: car.model_ar || '',
+          description_en: car.description_en || '', description_ar: car.description_ar || '',
+          year: car.year || new Date().getFullYear(),
           category: car.category?._id || car.category || '',
-          price: String(car.price) || '',
-          description: car.description || '',
-          rentalOptions: car.rentalOptions || {
-            isFullDayRental: false,
-            isStandardRental: true,
-            fullDayHours: 12,
-            limitKilometers: 100,
-            extraKmCost: '',
-            extraHourCost: ''
-          },
-          specs: car.specs || { passengers: 4, luggage: 2, wifi: true, fourWheel: false, gps: true, leatherSeats: true, climateControl: true }
+          price: car.price || '',
+          featured: car.featured ?? false,
+          isAvailable: car.isAvailable ?? true,
+          rentalOptions: { ...formData.rentalOptions, ...car.rentalOptions },
+          specs: { ...formData.specs, ...car.specs }
         };
 
-        setFormData(initialForm);
+        setFormData(cleanedData);
         setExistingImages(car.images || []);
         setCategories(catRes.data);
-        setOriginalSnapshot(JSON.stringify({ ...initialForm, images: car.images }));
+        setOriginalSnapshot(JSON.stringify({ ...cleanedData, images: car.images }));
       } catch (err) {
         router.push('/dashboard/fleet');
       } finally {
@@ -73,22 +63,22 @@ export default function EditCarPage({ params }) {
       }
     };
     fetchData();
-  }, [id, router]);
+  }, [id]);
 
-  // DIRTY & VALIDATION CHECKS
   const hasChanges = useMemo(() => {
     const currentSnapshot = JSON.stringify({ ...formData, images: existingImages });
     return currentSnapshot !== originalSnapshot || newFiles.length > 0;
   }, [formData, existingImages, newFiles, originalSnapshot]);
 
   const isFormValid = useMemo(() => {
-    const baseValid = formData.name && formData.category && formData.price && (existingImages.length + newFiles.length > 0);
-    
-    if (formData.rentalOptions.isFullDayRental) {
-      const { fullDayHours, limitKilometers, extraKmCost, extraHourCost } = formData.rentalOptions;
-      return baseValid && fullDayHours > 0 && limitKilometers > 0 && extraKmCost !== '' && extraHourCost !== '';
+    const { name_en, name_ar, category, price, rentalOptions } = formData;
+    const hasMedia = existingImages.length + newFiles.length > 0;
+    const baseFields = name_en && name_ar && category && price && hasMedia;
+
+    if (rentalOptions.isFullDayRental) {
+        return baseFields && rentalOptions.extraKmCost !== '' && rentalOptions.extraHourCost !== '';
     }
-    return baseValid;
+    return baseFields;
   }, [formData, existingImages, newFiles]);
 
   const handleSubmit = async (e) => {
@@ -100,7 +90,7 @@ export default function EditCarPage({ params }) {
 
     try {
       if (newFiles.length > 0) {
-        setStatusMsg("Uploading new assets...");
+        setStatusMsg("Uploading assets...");
         for (let item of newFiles) {
           const data = new FormData();
           data.append("file", item.file);
@@ -111,24 +101,15 @@ export default function EditCarPage({ params }) {
         }
       }
 
-      setStatusMsg("Updating fleet record...");
       await api.put(`/cars/${id}`, { 
         ...formData, 
         images: finalUrls,
         year: Number(formData.year),
-        price: Number(formData.price),
-        rentalOptions: {
-          ...formData.rentalOptions,
-          fullDayHours: Number(formData.rentalOptions.fullDayHours),
-          limitKilometers: Number(formData.rentalOptions.limitKilometers),
-          extraKmCost: Number(formData.rentalOptions.extraKmCost),
-          extraHourCost: Number(formData.rentalOptions.extraHourCost),
-        }
+        price: Number(formData.price)
       });
-
       router.push('/dashboard/fleet');
     } catch (err) {
-      alert("Update failed.");
+      alert("Error updating record.");
     } finally {
       setActionLoading(false);
     }
@@ -137,167 +118,90 @@ export default function EditCarPage({ params }) {
   const inputClass = "w-full p-4 rounded-xl border-2 border-slate-200 focus:border-blue-600 bg-white outline-none transition-all font-bold text-slate-900";
   const labelClass = "block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest";
 
-  if (loading) return <OverlayLoader message="Fetching vehicle details..." />;
+  if (loading) return <OverlayLoader message="Loading vehicle..." />;
 
   return (
     <div className="bg-slate-100 min-h-screen p-4 md:py-10">
       {actionLoading && <OverlayLoader message={statusMsg} />}
+      <form onSubmit={handleSubmit} className="max-w-6xl mx-auto bg-white p-6 md:p-12 rounded-[2.5rem] border-2 border-slate-200 shadow-2xl">
+        
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-10">
+            <Link href="/dashboard/fleet" className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><ArrowLeft size={16} /> Back</Link>
+            <div className="flex gap-3">
+                <button type="button" onClick={() => setFormData({...formData, featured: !formData.featured})} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${formData.featured ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-400'}`}>Featured</button>
+                <button type="button" onClick={() => setFormData({...formData, isAvailable: !formData.isAvailable})} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${formData.isAvailable ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>{formData.isAvailable ? 'Listed' : 'Hidden'}</button>
+            </div>
+        </div>
 
-      <form onSubmit={handleSubmit} className="max-w-5xl mx-auto bg-white p-6 md:p-12 rounded-3xl border-2 border-slate-300 shadow-2xl">
-        <Link href="/dashboard/fleet" className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase hover:text-blue-600 transition-colors mb-8">
-          <ArrowLeft size={16} /> Discard Changes
-        </Link>
-
-        <header className="mb-10">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-2">Edit Vehicle</h1>
-          <p className="text-slate-400 font-bold text-sm uppercase tracking-tight">System ID: {id}</p>
-        </header>
-
-        {/* MEDIA MANAGEMENT */}
-        <section className="mb-10">
-          <div className="flex items-center gap-2 text-blue-600 font-black text-[11px] uppercase mb-4 tracking-widest">
-            <Upload size={14} /> Gallery Management ({existingImages.length + newFiles.length}/3)
-          </div>
-          <div className="flex flex-wrap gap-4 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+        {/* Gallery */}
+        <section className="mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-3xl border-2 border-slate-100">
             {existingImages.map((url, i) => (
-              <div key={i} className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-blue-600 shadow-lg group">
+              <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-blue-600">
                 <img src={url} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setExistingImages(existingImages.filter(img => img !== url))} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"><X size={12} strokeWidth={4}/></button>
+                <button type="button" onClick={() => setExistingImages(existingImages.filter(img => img !== url))} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg"><X size={14}/></button>
               </div>
             ))}
             {newFiles.map((img, i) => (
-              <div key={i} className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-dashed border-blue-400">
-                <img src={img.preview} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setNewFiles(newFiles.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-slate-800 text-white p-1 rounded-full"><X size={12}/></button>
+              <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-dashed border-blue-400">
+                <img src={img.preview} className="w-full h-full object-cover opacity-70" />
+                <button type="button" onClick={() => setNewFiles(newFiles.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 bg-slate-800 text-white p-1.5 rounded-lg"><X size={14}/></button>
               </div>
             ))}
-            {existingImages.length + newFiles.length < 3 && (
-              <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-white hover:border-blue-600 transition-all group">
-                <Upload size={20} className="text-slate-300 group-hover:text-blue-600" />
-                <input type="file" multiple onChange={(e) => {
-                   const files = Array.from(e.target.files).map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-                   if (existingImages.length + newFiles.length + files.length > 3) return alert("Max 3 photos");
-                   setNewFiles([...newFiles, ...files]);
-                }} className="hidden" />
-              </label>
-            )}
+            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer">
+              <Upload size={24} className="text-slate-300" />
+              <input type="file" multiple className="hidden" onChange={(e) => {
+                 const files = Array.from(e.target.files).map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+                 setNewFiles([...newFiles, ...files]);
+              }} />
+            </label>
           </div>
         </section>
 
-        {/* BASIC INFO */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="space-y-6">
-            <div>
-              <label className={labelClass}>Category Assignment</label>
-              <select className={inputClass} required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelClass}>Name</label><input className={inputClass} required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-                <div><label className={labelClass}>Model</label><input className={inputClass} required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} /></div>
-            </div>
-          </div>
-          <div>
-            <label className={labelClass}>Daily Rate & Year</label>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-                <input type="number" className={inputClass} value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} placeholder="Price" />
-                <input type="number" className={inputClass} value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="Year" />
-            </div>
-          </div>
-        </div>
-
-        {/* RENTAL SERVICES SECTION */}
-        <div className="mb-10 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
-            <h3 className="text-[11px] font-black uppercase text-blue-600 mb-6 flex items-center gap-2">
-                <ShieldCheck size={16}/> Service Configuration
-            </h3>
-            
-            <div className="flex gap-8 mb-6">
-                <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isStandardRental} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isStandardRental: e.target.checked}})} />
-                    <span className="font-black text-xs uppercase text-slate-700">Standard</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isFullDayRental} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isFullDayRental: e.target.checked}})} />
-                    <span className="font-black text-xs uppercase text-blue-600">Full Day Package</span>
-                </label>
-            </div>
-
-            {formData.rentalOptions.isFullDayRental && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
-                    <div>
-    <label className={labelClass}>Included Hours</label>
-    <input 
-        type="number" 
-        min={1} 
-        max={24} 
-        className={inputClass} 
-        // Use || '' to ensure it's never undefined
-        value={formData.rentalOptions?.fullDayHours || ''} 
-        onChange={e => setFormData({
-            ...formData, 
-            rentalOptions: {...formData.rentalOptions, fullDayHours: e.target.value}
-        })} 
-    />
-</div>
-
-{/* Included KM */}
-<div>
-    <label className={labelClass}>Included KM</label>
-    <input 
-        type="number" 
-        min={0}
-        className={inputClass} 
-        value={formData.rentalOptions?.limitKilometers || ''} 
-        onChange={e => setFormData({
-            ...formData, 
-            rentalOptions: {...formData.rentalOptions, limitKilometers: e.target.value}
-        })} 
-    />
-</div>
-
-{/* Extra Hour Cost */}
-<div>
-    <label className={labelClass}>Extra Hour $</label>
-    <input 
-        type="number" 
-        min={0}
-        className={inputClass} 
-        value={formData.rentalOptions?.extraHourCost || ''} 
-        onChange={e => setFormData({
-            ...formData, 
-            rentalOptions: {...formData.rentalOptions, extraHourCost: e.target.value}
-        })} 
-    />
-</div>
-
-{/* Extra KM Cost */}
-<div>
-    <label className={labelClass}>Extra KM $</label>
-    <input 
-        type="number" 
-        min={0}
-        className={inputClass} 
-        value={formData.rentalOptions?.extraKmCost || ''} 
-        onChange={e => setFormData({
-            ...formData, 
-            rentalOptions: {...formData.rentalOptions, extraKmCost: e.target.value}
-        })} 
-    />
-</div>
+        {/* Main Inputs Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
+            <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4">Basic Details</h3>
+                <label className={labelClass}>Vehicle Category</label>
+                <select className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                    {categories.map(c => <option key={c._id} value={c._id}>{c.name_en}</option>)}
+                </select>
+                <div className="grid gap-4">
+                    <div><label className={labelClass}>Name (EN)</label><input className={inputClass} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} /></div>
+                    <div><label className={labelClass}>Name (AR)</label><input className={inputClass} dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} /></div>
                 </div>
-            )}
+                <div className="grid gap-4">
+                    <div><label className={labelClass}>Model (EN)</label><input className={inputClass} value={formData.model_en} onChange={e => setFormData({...formData, model_en: e.target.value})} /></div>
+                    <div><label className={labelClass}>Model (AR)</label><input className={inputClass} dir="rtl" value={formData.model_ar} onChange={e => setFormData({...formData, model_ar: e.target.value})} /></div>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4">Specs</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className={labelClass}>Passengers</label><input type="number" className={inputClass} value={formData.specs.passengers} onChange={e => setFormData({...formData, specs: {...formData.specs, passengers: Number(e.target.value)}})} /></div>
+                    <div><label className={labelClass}>Luggage</label><input type="number" className={inputClass} value={formData.specs.luggage} onChange={e => setFormData({...formData, specs: {...formData.specs, luggage: Number(e.target.value)}})} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    {Object.keys(formData.specs).filter(k => typeof formData.specs[k] === 'boolean').map(key => (
+                        <label key={key} className="flex text-slate-900 items-center gap-2 p-2 bg-slate-50 rounded-lg text-[9px] font-bold uppercase">
+                            <input type="checkbox" checked={formData.specs[key]} onChange={e => setFormData({...formData, specs: {...formData.specs, [key]: e.target.checked}})} />
+                            {key.replace(/([A-Z])/g, ' $1')}
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4">Description</h3>
+                <div><label className={labelClass}>Description (EN)</label><textarea className={`${inputClass} h-[100px]`} value={formData.description_en} onChange={e => setFormData({...formData, description_en: e.target.value})} /></div>
+                <div><label className={labelClass}>Description (AR)</label><textarea className={`${inputClass} h-[100px]`} dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})} /></div>
+            </div>
         </div>
 
-        <button 
-          disabled={!hasChanges || !isFormValid || actionLoading} 
-          className={`w-full p-6 rounded-2xl font-black uppercase tracking-widest text-lg flex items-center justify-center gap-3 transition-all shadow-xl
-            ${(hasChanges && isFormValid) ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'}
-          `}
-        >
-          {actionLoading ? "Processing..." : hasChanges ? <><Save size={20} /> Update Vehicle</> : "No Changes Found"}
-          {hasChanges && isFormValid && <CheckCircle size={18} />}
+        <button disabled={!hasChanges || !isFormValid || actionLoading} className="w-full p-8 rounded-[2rem] bg-slate-900 text-white font-black uppercase tracking-[0.2em]">
+          {actionLoading ? "Updating..." : "Commit Changes"}
         </button>
       </form>
     </div>

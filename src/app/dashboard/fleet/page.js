@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api'; 
 import { 
-  Trash2, Edit3, Car, Image as ImageIcon, Tag, Clock, 
+  Trash2, Edit3, Car, Image as ImageIcon, Clock, 
   Users, Briefcase, Wifi, ShieldCheck, MapPin, Wind, Zap 
 } from 'lucide-react';
 import OverlayLoader from '@/components/loader';
@@ -30,6 +30,7 @@ export default function GetCarsPage() {
     if (!window.confirm("Delete this vehicle? This action is permanent.")) return;
     setActionLoading(true);
     try {
+      console.log("Deleting car with ID:", id);
       await api.delete(`/cars/${id}`);
       setCars(prev => prev.filter(c => c._id !== id));
     } catch (err) {
@@ -48,7 +49,6 @@ export default function GetCarsPage() {
       {actionLoading && <OverlayLoader message="Removing vehicle..." />}
 
       <div className="max-w-full mx-auto">
-        {/* HEADER */}
         <div className="bg-white p-6 rounded-xl border-2 border-slate-300 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 shadow-sm">
           <div className="flex items-center gap-3">
             <Car className="text-slate-900" size={28} />
@@ -70,7 +70,7 @@ export default function GetCarsPage() {
               <thead>
                 <tr className="bg-slate-900 text-white uppercase text-[10px] font-black tracking-widest">
                   <th className="p-4 text-left w-[80px]">Photo</th>
-                  <th className="p-4 text-left">Vehicle Info</th>
+                  <th className="p-4 text-left">Vehicle Info (EN/AR)</th>
                   <th className="p-4 text-left">Specifications</th>
                   <th className="p-4 text-left">Rental Types</th>
                   <th className="p-4 text-left">Full Day Limits</th>
@@ -81,23 +81,21 @@ export default function GetCarsPage() {
               <tbody className="divide-y divide-slate-200">
                 {cars.map((car) => (
                   <tr key={car._id} className="hover:bg-blue-50/30 transition-colors">
-                    {/* PHOTO */}
                     <td className="p-4">
                       <div className="w-16 h-12 rounded bg-slate-100 border border-slate-200 overflow-hidden shadow-inner">
                         {car.images?.[0] ? <img src={car.images[0]} className="w-full h-full object-cover" /> : <ImageIcon className="m-auto text-slate-300" />}
                       </div>
                     </td>
                     
-                    {/* INFO */}
                     <td className="p-4">
-                        <div className="font-black text-slate-900 text-sm uppercase leading-none mb-1">{car.name}</div>
-                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">{car.model} • {car.year}</div>
+                        <div className="font-black text-slate-900 text-sm uppercase leading-none mb-1">{car.name_en}</div>
+                        <div className="font-black text-slate-500 text-[10px] uppercase mb-1" dir="rtl">{car.name_ar}</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">{car.model_en} • {car.year}</div>
                         <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[9px] font-black uppercase">
-                            {car.category?.name || 'General'}
+                            {car.category?.name_en || 'General'}
                         </span>
                     </td>
 
-                    {/* SPECS */}
                     <td className="p-4">
                         <div className="grid grid-cols-2 gap-1.5 w-max">
                             <span className={specIconClass}><Users size={10}/> {car.specs?.passengers || 4}</span>
@@ -109,7 +107,6 @@ export default function GetCarsPage() {
                         </div>
                     </td>
 
-                    {/* RENTAL TYPES */}
                     <td className="p-4">
                         <div className="flex flex-col gap-1">
                             {car.rentalOptions?.isStandardRental && (
@@ -125,12 +122,11 @@ export default function GetCarsPage() {
                         </div>
                     </td>
 
-                    {/* FULL DAY LIMITS */}
                     <td className="p-4">
                         {car.rentalOptions?.isFullDayRental ? (
                             <div className="space-y-1">
                                 <div className="text-[10px] font-bold text-slate-700 uppercase">
-                                    <span className="text-slate-400">Limit:</span> {car.rentalOptions.fullDayHours}h / {car.rentalOptions.limitKilometers}km
+                                    {car.rentalOptions.fullDayHours}h / {car.rentalOptions.limitKilometers}km
                                 </div>
                                 <div className="text-[9px] font-bold text-blue-500 uppercase">
                                     +${car.rentalOptions.extraHourCost}/hr • +${car.rentalOptions.extraKmCost}/km
@@ -141,13 +137,11 @@ export default function GetCarsPage() {
                         )}
                     </td>
 
-                    {/* PRICING */}
                     <td className="p-4">
                         <div className="text-sm font-black text-slate-900">${car.price}</div>
                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Per Day Base</div>
                     </td>
 
-                    {/* ACTIONS */}
                     <td className="p-4 text-center">
                       <div className="flex justify-center gap-2">
                         <Link href={`/dashboard/fleet/edit/${car._id}`} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-900 hover:text-white transition-all">

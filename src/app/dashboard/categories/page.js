@@ -7,31 +7,35 @@ import OverlayLoader from '@/components/loader';
 
 export default function ManageCategoriesPage() {
   const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState("");
+  // Updated state for dual inputs
+  const [newCategory, setNewCategory] = useState({ name_en: "", name_ar: "" });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  useEffect(() => { fetchCategories(); }, []);
 
   const fetchCategories = async () => {
     try {
       const res = await api.get('/categories');
       setCategories(res.data);
-    } catch (err) {
-      console.error("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error("Failed to load categories"); }
+    finally { setLoading(false); }
   };
 
-  // CHECK: Is the typed name already in our list? (Case-Insensitive)
+  // CHECK: Is either name already in our list?
   const isDuplicate = useMemo(() => {
-    return categories.some(cat => cat.name.toLowerCase() === newCategory.trim().toLowerCase());
+    const en = newCategory.name_en.trim().toLowerCase();
+    const ar = newCategory.name_ar.trim().toLowerCase();
+    console.log(categories, "Checking duplicates for:", en, ar);
+    console.log(categories.some(cat => cat.name_en.toLowerCase() === en || cat.name_ar.toLowerCase() === ar), "Duplicate found?");
+    return categories.some(cat => 
+      cat.name_en.toLowerCase() === en || cat.name_ar.toLowerCase() === ar
+    );
   }, [newCategory, categories]);
 
-  const canSubmit = newCategory.trim().length > 2 && !isDuplicate && !isSubmitting;
+  const canSubmit = newCategory.name_en.trim().length > 1 && 
+                    newCategory.name_ar.trim().length > 1 && 
+                    !isDuplicate && !isSubmitting;
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -39,17 +43,18 @@ export default function ManageCategoriesPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await api.post('/categories', { name: newCategory.trim() });
-      // Add to local list and clear input
+      const res = await api.post('/categories', { 
+        name_en: newCategory.name_en.trim(), 
+        name_ar: newCategory.name_ar.trim() 
+      });
       setCategories([res.data, ...categories]);
-      setNewCategory("");
+      setNewCategory({ name_en: "", name_ar: "" });
     } catch (err) {
       alert(err.response?.data?.message || "Failed to add category");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   if (loading) return <OverlayLoader message="Syncing Categories..." />;
 
   return (
@@ -72,20 +77,35 @@ export default function ManageCategoriesPage() {
               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Add New Category Type</label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <input 
+                  <div><input 
                     type="text"
                     placeholder="e.g. ULTRA LUXURY"
                     className={`w-full p-4 rounded-xl border-2 outline-none font-bold transition-all uppercase ${
                       isDuplicate ? 'border-red-400 bg-red-50 text-red-900' : 'border-slate-200 focus:border-blue-600 bg-white'
                     }`}
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
+                    value={newCategory.name_en}
+                    onChange={(e) => setNewCategory({...newCategory, name_en: e.target.value })}
                   />
                   {isDuplicate && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 flex items-center gap-1 font-black text-[10px] uppercase">
                       <AlertCircle size={14} /> Already Exists
                     </div>
-                  )}
+                  )}</div>
+
+                    <div><input 
+                    type="text"
+                    placeholder="مثال: فاخرة جداً"
+                    className={`w-full p-4 rounded-xl border-2 outline-none font-bold transition-all uppercase ${
+                      isDuplicate ? 'border-red-400 bg-red-50 text-red-900' : 'border-slate-200 focus:border-blue-600 bg-white'
+                    }`}
+                    value={newCategory.name_ar}
+                    onChange={(e) => setNewCategory({...newCategory,name_ar:e.target.value})}
+                  />
+                  {isDuplicate && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-500 flex items-center gap-1 font-black text-[10px] uppercase">
+                      <AlertCircle size={14} /> Already Exists
+                    </div>
+                  )}</div>
                 </div>
                 <button 
                   type="submit"
@@ -123,7 +143,7 @@ export default function ManageCategoriesPage() {
                       <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                         <Tag size={16} />
                       </div>
-                      <span className="font-black text-slate-900 uppercase tracking-tight">{cat.name}</span>
+                      <span className="font-black text-slate-900 uppercase tracking-tight">{cat.name_en}/{cat.name_ar}</span>
                     </div>
                     <CheckCircle2 className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" size={18} />
                   </div>

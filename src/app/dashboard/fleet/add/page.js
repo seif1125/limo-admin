@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Upload, X, Save, Clock, ShieldCheck, Gauge, Info } from 'lucide-react';
+import { ArrowLeft, Upload, X, Save, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -14,8 +14,11 @@ export default function AddCarPage() {
   const [localImages, setLocalImages] = useState([]); 
 
   const [formData, setFormData] = useState({
-    name: '', model: '', year: new Date().getFullYear(),
-    category: '', price: '', description: '',
+    name_en: '', name_ar: '',
+    model_en: '', model_ar: '',
+    description_en: '', description_ar: '',
+    year: new Date().getFullYear(),
+    category: '', price: '',
     rentalOptions: {
       isFullDayRental: false,
       isStandardRental: true,
@@ -31,15 +34,12 @@ export default function AddCarPage() {
     api.get('/categories').then(res => setCategories(res.data));
   }, []);
 
-  // VALIDATION: Checks base fields + conditional fields if Full Day is enabled
   const isFormValid = useMemo(() => {
-    const baseValid = formData.name && formData.category && formData.price && localImages.length > 0;
-    
+    const baseValid = formData.name_en && formData.name_ar && formData.category && formData.price && localImages.length > 0;
     if (formData.rentalOptions.isFullDayRental) {
       const { fullDayHours, limitKilometers, extraKmCost, extraHourCost } = formData.rentalOptions;
       return baseValid && fullDayHours > 0 && limitKilometers > 0 && extraKmCost !== '' && extraHourCost !== '';
     }
-    
     return baseValid;
   }, [formData, localImages]);
 
@@ -63,14 +63,7 @@ export default function AddCarPage() {
       await api.post('/cars', { 
         ...formData, 
         images: uploadedUrls,
-        price: Number(formData.price),
-        rentalOptions: {
-          ...formData.rentalOptions,
-          fullDayHours: Number(formData.rentalOptions.fullDayHours),
-          limitKilometers: Number(formData.rentalOptions.limitKilometers),
-          extraKmCost: Number(formData.rentalOptions.extraKmCost),
-          extraHourCost: Number(formData.rentalOptions.extraHourCost),
-        }
+        price: Number(formData.price)
       });
       router.push('/dashboard/fleet');
     } catch (err) { 
@@ -101,12 +94,17 @@ export default function AddCarPage() {
               <label className={labelClass}>Vehicle Category</label>
               <select required className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                 <option value="">Select Category</option>
-                {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                {categories.map(c => <option key={c._id} value={c._id}>{c.name_en}</option>)}
               </select>
 
               <div className="grid grid-cols-2 gap-4">
-                <div><label className={labelClass}>Vehicle Name</label><input className={inputClass} required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="S-Class" /></div>
-                <div><label className={labelClass}>Sub-Model</label><input className={inputClass} required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="S580" /></div>
+                <div><label className={labelClass}>Name (EN)</label><input className={inputClass} required value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} /></div>
+                <div><label className={labelClass}>Name (AR)</label><input className={inputClass} dir="rtl" required value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} /></div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelClass}>Model (EN)</label><input className={inputClass} required value={formData.model_en} onChange={e => setFormData({...formData, model_en: e.target.value})} /></div>
+                <div><label className={labelClass}>Model (AR)</label><input className={inputClass} dir="rtl" required value={formData.model_ar} onChange={e => setFormData({...formData, model_ar: e.target.value})} /></div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -116,8 +114,10 @@ export default function AddCarPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Internal Description</label>
-              <textarea className={`${inputClass} h-[195px] resize-none`} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="High-end executive sedan..." />
+              <label className={labelClass}>Description (EN)</label>
+              <textarea className={`${inputClass} h-[120px]`} value={formData.description_en} onChange={e => setFormData({...formData, description_en: e.target.value})} />
+              <label className={labelClass}>Description (AR)</label>
+              <textarea className={`${inputClass} h-[120px]`} dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})} />
             </div>
           </div>
 
@@ -204,7 +204,35 @@ export default function AddCarPage() {
               </div>
             )}
           </div>
+           {/* SECTION: SPECIFICATIONS */}
+<div className="mb-10 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+  <h3 className="text-[11px] font-black uppercase text-blue-600 mb-6">Technical Specifications</h3>
+  
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div>
+      <label className={labelClass}>Passengers</label>
+      <input type="number" className={inputClass} value={formData.specs.passengers} onChange={e => setFormData({...formData, specs: {...formData.specs, passengers: Number(e.target.value)}})} />
+    </div>
+    <div>
+      <label className={labelClass}>Luggage</label>
+      <input type="number" className={inputClass} value={formData.specs.luggage} onChange={e => setFormData({...formData, specs: {...formData.specs, luggage: Number(e.target.value)}})} />
+    </div>
+  </div>
 
+  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
+    {['wifi', 'fourWheel', 'gps', 'leatherSeats', 'climateControl'].map((spec) => (
+      <label key={spec} className="flex items-center gap-2 cursor-pointer bg-white p-3 rounded-xl border border-slate-200">
+        <input 
+          type="checkbox" 
+          className="w-4 h-4 accent-blue-600" 
+          checked={formData.specs[spec]} 
+          onChange={e => setFormData({...formData, specs: {...formData.specs, [spec]: e.target.checked}})} 
+        />
+        <span className="text-[10px] font-black uppercase text-slate-700">{spec.replace(/([A-Z])/g, ' $1')}</span>
+      </label>
+    ))}
+  </div>
+</div>
           {/* SECTION: IMAGES */}
           <div className="mb-10">
             <label className={labelClass}>Media Assets ({localImages.length}/3)</label>

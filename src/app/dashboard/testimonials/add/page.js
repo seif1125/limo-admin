@@ -12,11 +12,11 @@ export default function AddTestimonialPage() {
   const [image, setImage] = useState("");
   
   const [formData, setFormData] = useState({
-    name: '',
-    title: '',
-    comment: '',
+    name_en: '', name_ar: '',
+    title_en: '', title_ar: '',
+    comment_en: '', comment_ar: '',
     rating: 5,
-    origin: ''
+    origin_en: '', origin_ar: ''
   });
 
   const handleUpload = async (e) => {
@@ -70,32 +70,53 @@ export default function AddTestimonialPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-          <div>
-            <label className={labelClass}>Full Name</label>
-            <input className={inputClass} required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          </div>
-          <div>
-            <label className={labelClass}>Company / Title</label>
-            <input className={inputClass} required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
-          </div>
-        </div>
+  <div>
+    <label className={labelClass}>Name (EN)</label>
+    <input className={inputClass} required value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} />
+  </div>
+  <div>
+    <label className={labelClass}>Name (AR)</label>
+    <input className={inputClass} dir="rtl" required value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} />
+  </div>
+</div>
 
+<div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+  <div>
+    <label className={labelClass}>Title (EN)</label>
+    <input className={inputClass} required value={formData.title_en} onChange={e => setFormData({...formData, title_en: e.target.value})} />
+  </div>
+  <div>
+    <label className={labelClass}>Title (AR)</label>
+    <input className={inputClass} dir="rtl" required value={formData.title_ar} onChange={e => setFormData({...formData, title_ar: e.target.value})} />
+  </div>
+</div>
+
+<label className={labelClass}>Comment (EN)</label>
+<textarea className={`${inputClass} h-24`} required value={formData.comment_en} onChange={e => setFormData({...formData, comment_en: e.target.value})} />
+<label className={labelClass}>Comment (AR)</label>
+<textarea className={`${inputClass} h-24`} dir="rtl" required value={formData.comment_ar} onChange={e => setFormData({...formData, comment_ar: e.target.value})} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
           <div>
             <label className={labelClass}>Origin (Country/City)</label>
-            <input className={inputClass} value={formData.origin} onChange={e => setFormData({...formData, origin: e.target.value})} placeholder="e.g. Egypt" />
+            <input className={inputClass} value={formData.origin_en} onChange={e => setFormData({...formData, origin_en: e.target.value})} placeholder="e.g. Egypt" />
           </div>
           <div>
+            <label className={labelClass}>Origin (AR)</label>
+            <input className={inputClass} dir="rtl" value={formData.origin_ar} onChange={e => setFormData({...formData, origin_ar: e.target.value})} placeholder="مثال: مصر" />
+          </div>
+
+      
+        </div>
+        <div className='w-full'>
             <label className={labelClass}>Rating (1-5)</label>
             <select className={inputClass} value={formData.rating} onChange={e => setFormData({...formData, rating: Number(e.target.value)})}>
               {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Stars</option>)}
             </select>
           </div>
-        </div>
-
-        <label className={labelClass}>Review Comment</label>
-        <textarea className={`${inputClass} h-32 resize-none`} required value={formData.comment} onChange={e => setFormData({...formData, comment: e.target.value})} />
-
+        <label className={labelClass}>Review Comment (EN)</label>
+        <textarea className={`${inputClass} h-32 resize-none`} required value={formData.comment_en} onChange={e => setFormData({...formData, comment_en: e.target.value})} />
+        <label className={labelClass}>Review Comment (AR)</label>
+        <textarea className={`${inputClass} h-32 resize-none`} dir="rtl" required value={formData.comment_ar} onChange={e => setFormData({...formData, comment_ar: e.target.value})} />
         <button type="submit" className="w-full bg-slate-900 hover:bg-blue-600 text-white p-5 rounded-xl font-black text-lg uppercase tracking-widest transition-all shadow-lg">
           Publish Testimonial
         </button>
