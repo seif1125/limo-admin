@@ -22,10 +22,12 @@ export default function AddCarPage() {
     rentalOptions: {
       isFullDayRental: false,
       isStandardRental: true,
+      isAirport:false,
+      isCityToCity:false,
       fullDayHours: 12,
       limitKilometers: 100,
-      extraKmCost: '',
-      extraHourCost: ''
+      extraKmCost: 0,
+      extraHourCost: 0,
     },
     specs: { passengers: 4, luggage: 2, wifi: true, leatherSeats: true, fourWheel: false, gps: true, climateControl: true }
   });
@@ -137,9 +139,17 @@ export default function AddCarPage() {
                 <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isFullDayRental} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isFullDayRental: e.target.checked}})} />
                 <span className="font-black text-xs uppercase text-slate-700 text-blue-600">Full Day Package</span>
               </label>
-            </div>
+              <label>
+                <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isAirport} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isAirport: e.target.checked}})} />
+                <span className="font-black text-xs uppercase text-slate-700">Airport</span>
+              </label>
+              <label>
+                <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={formData.rentalOptions.isCityToCity} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, isCityToCity: e.target.checked}})} />
+                <span className="font-black text-xs uppercase text-slate-700">City-to-City</span>
+              </label>
+            </div></div>
 
-            {formData.rentalOptions.isFullDayRental && (
+   { (formData.rentalOptions.isFullDayRental||formData.rentalOptions.isCityToCity||formData.rentalOptions.isAirport) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200">
                <div>
     <label className={labelClass}>Included Hours</label>
@@ -156,6 +166,20 @@ export default function AddCarPage() {
         })} 
     />
 </div>
+<div>
+    <label className={labelClass}>Extra Hour $</label>
+    <input 
+        type="number" 
+        min={0}
+        className={inputClass} 
+        value={formData.rentalOptions?.extraHourCost || ''} 
+        onChange={e => setFormData({
+            ...formData, 
+            rentalOptions: {...formData.rentalOptions, extraHourCost: e.target.value}
+        })} 
+    />
+</div>
+
 
 {/* Included KM */}
 <div>
@@ -172,20 +196,7 @@ export default function AddCarPage() {
     />
 </div>
 
-{/* Extra Hour Cost */}
-<div>
-    <label className={labelClass}>Extra Hour $</label>
-    <input 
-        type="number" 
-        min={0}
-        className={inputClass} 
-        value={formData.rentalOptions?.extraHourCost || ''} 
-        onChange={e => setFormData({
-            ...formData, 
-            rentalOptions: {...formData.rentalOptions, extraHourCost: e.target.value}
-        })} 
-    />
-</div>
+
 
 {/* Extra KM Cost */}
 <div>
@@ -201,9 +212,9 @@ export default function AddCarPage() {
         })} 
     />
 </div>
-              </div>
-            )}
-          </div>
+      </div>)}
+          
+        
            {/* SECTION: SPECIFICATIONS */}
 <div className="mb-10 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
   <h3 className="text-[11px] font-black uppercase text-blue-600 mb-6">Technical Specifications</h3>

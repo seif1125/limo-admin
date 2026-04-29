@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, use } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Save, X, Upload, CheckCircle, ShieldCheck, Star, Eye, EyeOff, Settings2, Clock } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, Clock, Settings2, ShieldCheck, Camera } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -28,6 +28,7 @@ export default function EditCarPage({ params }) {
     featured: false, isAvailable: true,
     rentalOptions: {
       isFullDayRental: false, isStandardRental: true,
+      isAirport: false, isCityToCity: false,
       fullDayHours: 12, limitKilometers: 100, extraKmCost: '', extraHourCost: ''
     },
     specs: { passengers: 4, luggage: 2, wifi: true, fourWheel: false, gps: true, leatherSeats: true, climateControl: true }
@@ -56,11 +57,7 @@ export default function EditCarPage({ params }) {
         setExistingImages(car.images || []);
         setCategories(catRes.data);
         setOriginalSnapshot(JSON.stringify({ ...cleanedData, images: car.images }));
-      } catch (err) {
-        router.push('/dashboard/fleet');
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { router.push('/dashboard/fleet'); } finally { setLoading(false); }
     };
     fetchData();
   }, [id]);
@@ -73,21 +70,20 @@ export default function EditCarPage({ params }) {
   const isFormValid = useMemo(() => {
     const { name_en, name_ar, category, price, rentalOptions } = formData;
     const hasMedia = existingImages.length + newFiles.length > 0;
-    const baseFields = name_en && name_ar && category && price && hasMedia;
-
-    if (rentalOptions.isFullDayRental) {
-        return baseFields && rentalOptions.extraKmCost !== '' && rentalOptions.extraHourCost !== '';
+    const base = name_en && name_ar && category && price && hasMedia;
+    const extraFieldsRequired = rentalOptions.isFullDayRental || rentalOptions.isAirport || rentalOptions.isCityToCity;
+    
+    if (extraFieldsRequired) {
+        return base && rentalOptions.fullDayHours > 0 && rentalOptions.limitKilometers > 0 && rentalOptions.extraKmCost !== '' && rentalOptions.extraHourCost !== '';
     }
-    return baseFields;
+    return base;
   }, [formData, existingImages, newFiles]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid || !hasChanges) return;
-
     setActionLoading(true);
     let finalUrls = [...existingImages];
-
     try {
       if (newFiles.length > 0) {
         setStatusMsg("Uploading assets...");
@@ -100,19 +96,9 @@ export default function EditCarPage({ params }) {
           finalUrls.push(fileData.secure_url);
         }
       }
-
-      await api.put(`/cars/${id}`, { 
-        ...formData, 
-        images: finalUrls,
-        year: Number(formData.year),
-        price: Number(formData.price)
-      });
+      await api.put(`/cars/${id}`, { ...formData, images: finalUrls, year: Number(formData.year), price: Number(formData.price) });
       router.push('/dashboard/fleet');
-    } catch (err) {
-      alert("Error updating record.");
-    } finally {
-      setActionLoading(false);
-    }
+    } catch (err) { alert("Update failed."); } finally { setActionLoading(false); }
   };
 
   const inputClass = "w-full p-4 rounded-xl border-2 border-slate-200 focus:border-blue-600 bg-white outline-none transition-all font-bold text-slate-900";
@@ -128,15 +114,12 @@ export default function EditCarPage({ params }) {
         {/* Header Section */}
         <div className="flex justify-between items-center mb-10">
             <Link href="/dashboard/fleet" className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><ArrowLeft size={16} /> Back</Link>
-            <div className="flex gap-3">
-                <button type="button" onClick={() => setFormData({...formData, featured: !formData.featured})} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${formData.featured ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-400'}`}>Featured</button>
-                <button type="button" onClick={() => setFormData({...formData, isAvailable: !formData.isAvailable})} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${formData.isAvailable ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>{formData.isAvailable ? 'Listed' : 'Hidden'}</button>
-            </div>
         </div>
 
-        {/* Gallery */}
+        {/* GALLERY SECTION */}
         <section className="mb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-3xl border-2 border-slate-100">
+          <label className={labelClass}>Vehicle Gallery</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
             {existingImages.map((url, i) => (
               <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-blue-600">
                 <img src={url} className="w-full h-full object-cover" />
@@ -150,7 +133,7 @@ export default function EditCarPage({ params }) {
               </div>
             ))}
             <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer">
-              <Upload size={24} className="text-slate-300" />
+              <Camera size={24} className="text-slate-300" />
               <input type="file" multiple className="hidden" onChange={(e) => {
                  const files = Array.from(e.target.files).map(f => ({ file: f, preview: URL.createObjectURL(f) }));
                  setNewFiles([...newFiles, ...files]);
@@ -162,34 +145,20 @@ export default function EditCarPage({ params }) {
         {/* Main Inputs Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
             <div className="space-y-6">
-                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4">Basic Details</h3>
-                <label className={labelClass}>Vehicle Category</label>
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><Settings2 size={16}/> Basic Details</h3>
+                <label className={labelClass}>Category</label>
                 <select className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                     {categories.map(c => <option key={c._id} value={c._id}>{c.name_en}</option>)}
                 </select>
-                <div className="grid gap-4">
-                    <div><label className={labelClass}>Name (EN)</label><input className={inputClass} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} /></div>
-                    <div><label className={labelClass}>Name (AR)</label><input className={inputClass} dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} /></div>
-                </div>
-                <div className="grid gap-4">
-                    <div><label className={labelClass}>Model (EN)</label><input className={inputClass} value={formData.model_en} onChange={e => setFormData({...formData, model_en: e.target.value})} /></div>
-                    <div><label className={labelClass}>Model (AR)</label><input className={inputClass} dir="rtl" value={formData.model_ar} onChange={e => setFormData({...formData, model_ar: e.target.value})} /></div>
-                </div>
+                <div><label className={labelClass}>Name (EN)</label><input className={inputClass} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} /></div>
+                <div><label className={labelClass}>Name (AR)</label><input className={inputClass} dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} /></div>
             </div>
 
             <div className="space-y-6">
-                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4">Specs</h3>
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><ShieldCheck size={16}/> Technical Specs</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div><label className={labelClass}>Passengers</label><input type="number" className={inputClass} value={formData.specs.passengers} onChange={e => setFormData({...formData, specs: {...formData.specs, passengers: Number(e.target.value)}})} /></div>
                     <div><label className={labelClass}>Luggage</label><input type="number" className={inputClass} value={formData.specs.luggage} onChange={e => setFormData({...formData, specs: {...formData.specs, luggage: Number(e.target.value)}})} /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    {Object.keys(formData.specs).filter(k => typeof formData.specs[k] === 'boolean').map(key => (
-                        <label key={key} className="flex text-slate-900 items-center gap-2 p-2 bg-slate-50 rounded-lg text-[9px] font-bold uppercase">
-                            <input type="checkbox" checked={formData.specs[key]} onChange={e => setFormData({...formData, specs: {...formData.specs, [key]: e.target.checked}})} />
-                            {key.replace(/([A-Z])/g, ' $1')}
-                        </label>
-                    ))}
                 </div>
             </div>
 
@@ -200,7 +169,29 @@ export default function EditCarPage({ params }) {
             </div>
         </div>
 
-        <button disabled={!hasChanges || !isFormValid || actionLoading} className="w-full p-8 rounded-[2rem] bg-slate-900 text-white font-black uppercase tracking-[0.2em]">
+        {/* SERVICE PACKAGES */}
+        <div className="mb-12 p-8 bg-slate-50 rounded-3xl border-2 border-slate-100">
+            <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><Clock size={16}/> Service Packages</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {[ { key: 'isStandardRental', label: 'Standard' }, { key: 'isFullDayRental', label: 'Full Day' }, { key: 'isAirport', label: 'Airport' }, { key: 'isCityToCity', label: 'City-to-City' } ].map(item => (
+                    <label key={item.key} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all text-center ${formData.rentalOptions[item.key] ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200'}`}>
+                        <input type="checkbox" className="hidden" checked={formData.rentalOptions[item.key]} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, [item.key]: e.target.checked}})} />
+                        <span className="text-[10px] font-black uppercase">{item.label}</span>
+                    </label>
+                ))}
+            </div>
+
+            {(formData.rentalOptions.isFullDayRental || formData.rentalOptions.isAirport || formData.rentalOptions.isCityToCity) && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-slate-200">
+                    <div><label className={labelClass}>Inc. Hours</label><input type="number" className={inputClass} value={formData.rentalOptions.fullDayHours} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, fullDayHours: Number(e.target.value)}})} /></div>
+                    <div><label className={labelClass}>Inc. KM</label><input type="number" className={inputClass} value={formData.rentalOptions.limitKilometers} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, limitKilometers: Number(e.target.value)}})} /></div>
+                    <div><label className={labelClass}>Extra Hour ($)</label><input type="number" className={inputClass} value={formData.rentalOptions.extraHourCost} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, extraHourCost: Number(e.target.value)}})} /></div>
+                    <div><label className={labelClass}>Extra KM ($)</label><input type="number" className={inputClass} value={formData.rentalOptions.extraKmCost} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, extraKmCost: Number(e.target.value)}})} /></div>
+                </div>
+            )}
+        </div>
+
+        <button disabled={!isFormValid || !hasChanges || actionLoading} className="w-full p-8 rounded-[2rem] bg-slate-900 text-white font-black uppercase tracking-[0.2em]">
           {actionLoading ? "Updating..." : "Commit Changes"}
         </button>
       </form>

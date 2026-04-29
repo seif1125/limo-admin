@@ -119,11 +119,21 @@ export default function GetCarsPage() {
                                     <Clock size={12}/> Full Day
                                 </span>
                             )}
+                            {car.rentalOptions?.isAirport && (
+                                <span className="flex items-center gap-1 text-[9px] font-black text-purple-600 uppercase">
+                                    <MapPin size={12}/> Airport
+                                </span>
+                            )}
+                            {car.rentalOptions?.isCityToCity && (
+                                <span className="flex items-center gap-1 text-[9px] font-black text-orange-600 uppercase">
+                                    <MapPin size={12}/> City-to-City
+                                </span>
+                            )}  
                         </div>
                     </td>
 
                     <td className="p-4">
-                        {car.rentalOptions?.isFullDayRental ? (
+                        {(car.rentalOptions?.isFullDayRental ||car.rentalOptions?.isAirport||car.rentalOptions?.isCityToCity)? (
                             <div className="space-y-1">
                                 <div className="text-[10px] font-bold text-slate-700 uppercase">
                                     {car.rentalOptions.fullDayHours}h / {car.rentalOptions.limitKilometers}km

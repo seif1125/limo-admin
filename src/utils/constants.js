@@ -4,6 +4,59 @@ export const nationalities = [
   ];
 
 
+  export const cities = [
+    {"name_en": "Cairo", "name_ar": "القاهرة"},
+    {"name_en": "Alexandria", "name_ar": "الإسكندرية"},
+    {"name_en": "Giza", "name_ar": "الجيزة"},
+    {"name_en": "Shubra El Kheima", "name_ar": "شبرا الخيمة"},
+    {"name_en": "Port Said", "name_ar": "بورسعيد"},
+    {"name_en": "Suez", "name_ar": "السويس"},
+    {"name_en": "Mansoura", "name_ar": "المنصورة"},
+    {"name_en": "Mahalla El Kubra", "name_ar": "المحلة الكبرى"},
+    {"name_en": "Tanta", "name_ar": "طنطا"},
+    {"name_en": "Asyut", "name_ar": "أسيوط"},
+    {"name_en": "Ismailia", "name_ar": "الإسماعيلية"},
+    {"name_en": "Fayyum", "name_ar": "الفيوم"},
+    {"name_en": "Zagazig", "name_ar": "الزقازيق"},
+    {"name_en": "Aswan", "name_ar": "أسوان"},
+    {"name_en": "Damietta", "name_ar": "دمياط"},
+    {"name_en": "Damanhur", "name_ar": "دمنهور"},
+    {"name_en": "Minya", "name_ar": "المنيا"},
+    {"name_en": "Beni Suef", "name_ar": "بني سويف"},
+    {"name_en": "Qena", "name_ar": "قنا"},
+    {"name_en": "Sohag", "name_ar": "سوهاج"},
+    {"name_en": "Hurghada", "name_ar": "الغردقة"},
+    {"name_en": "6th of October City", "name_ar": "مدينة السادس من أكتوبر"},
+    {"name_en": "Sharm El Sheikh", "name_ar": "شرم الشيخ"},
+    {"name_en": "Banha", "name_ar": "بنها"},
+    {"name_en": "Kafr El Sheikh", "name_ar": "كفر الشيخ"},
+    {"name_en": "Arish", "name_ar": "العريش"},
+    {"name_en": "Mallawi", "name_ar": "ملوي"},
+    {"name_en": "10th of Ramadan City", "name_ar": "العاشر من رمضان"},
+    {"name_en": "Bilbeis", "name_ar": "بلبيس"},
+    {"name_en": "Marsa Matruh", "name_ar": "مرسى مطروح"}
+]
+
+export const airports=[
+  {"name_en": "Cairo International Airport", "name_ar": "مطار القاهرة الدولي"},
+  {"name_en": "Borg El Arab International Airport", "name_ar": "مطار برج العرب الدولي"},
+  {"name_en": "Hurghada International Airport", "name_ar": "مطار الغردقة الدولي"},
+  {"name_en": "Sharm El Sheikh International Airport", "name_ar": "مطار شرم الشيخ الدولي"},
+  {"name_en": "Luxor International Airport", "name_ar": "مطار الأقصر الدولي"},
+  {"name_en": "Aswan International Airport", "name_ar": "مطار أسوان الدولي"},
+  {"name_en": "Sphinx International Airport", "name_ar": "مطار سفنكس الدولي"},
+  {"name_en": "Marsa Alam International Airport", "name_ar": "مطار مرسى علم الدولي"},
+  {"name_en": "Sohag International Airport", "name_ar": "مطار سوهاج الدولي"},
+  {"name_en": "Assiut International Airport", "name_ar": "مطار أسيوط الدولي"},
+  {"name_en": "El Alamein International Airport", "name_ar": "مطار العلمين الدولي"},
+  {"name_en": "Taba International Airport", "name_ar": "مطار طابا الدولي"},
+  {"name_en": "Mersa Matruh Airport", "name_ar": "مطار مرسى مطروح"},
+  {"name_en": "El Arish International Airport", "name_ar": "مطار العريش الدولي"}
+]
+
+
+
+
   export const Facebook = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
   );
