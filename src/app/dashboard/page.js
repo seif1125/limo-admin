@@ -304,29 +304,36 @@ export default function DashboardPage() {
 
                       {/* 8. Status */}
                       <td className={tdClass}>
-                         <div className="relative">
-                            <select 
-                              value={req.status} 
-                              onChange={(e) => updateStatus(req._id, e.target.value)}
-                              className={`w-full appearance-none px-4 py-3 rounded-xl text-[10px] font-black border-2 transition-all cursor-pointer ${
-                                req.status === 'active' ? 'bg-blue-600 text-white border-blue-700 shadow-lg shadow-blue-100' : 
-                                req.status === 'completed' ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-amber-100 text-amber-700 border-amber-300'
-                              }`}
-                            >
-                               <option value="pending">PENDING</option>
-                               <option value="active">ACTIVE TRIP</option>
-                               <option value="completed">COMPLETED</option>
-                            </select>
-                            <ChevronDown size={12} className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${req.status !== 'pending' ? 'text-white' : 'text-amber-700'}`} />
-                         </div>
-                      </td>
+   <div className="relative">
+      <select 
+        value={req.status} 
+        onChange={(e) => updateStatus(req._id, e.target.value)}
+        className={`w-full appearance-none px-4 py-3 rounded-xl text-[10px] font-black border-2 transition-all cursor-pointer ${
+          req.status === 'active' ? 'bg-blue-600 text-white border-blue-700 shadow-lg shadow-blue-100' : 
+          req.status === 'complete' ? 'bg-emerald-600 text-white border-emerald-700' : 
+          'bg-amber-100 text-amber-700 border-amber-300'
+        }`}
+      >
+         <option value="pending">PENDING</option>
+         <option value="active">ACTIVE TRIP</option>
+         {/* Value changed to 'complete' to match your Mongoose Schema */}
+         <option value="complete">COMPLETED</option> 
+      </select>
+      <ChevronDown 
+        size={12} 
+        className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${
+          req.status !== 'pending' ? 'text-white' : 'text-amber-700'
+        }`} 
+      />
+   </div>
+</td>
 
                       {/* Action Cell */}
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-3">
-                            {/* <Link href={`/dashboard/reservation/edit/${req._id}`} className="p-2.5 bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm">
+                            <Link href={`/dashboard/reservation/edit/${req._id}`} className="p-2.5 bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Pencil size={16} strokeWidth={2.5}/>
-                            </Link> */}
+                            </Link>
                             <button onClick={() => deleteRes(req._id)} className="p-2.5 bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all shadow-sm">
                                 <Trash2 size={16} strokeWidth={2.5}/>
                             </button>
