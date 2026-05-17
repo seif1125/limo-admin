@@ -51,14 +51,14 @@ export default function BannersPage() {
             </div>
             <div>
               <h1 className="text-slate-900 font-black text-2xl uppercase tracking-tighter">Hero Banners</h1>
-              <p className="text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-widest">Active: {banners.length} / 2</p>
+              <p className="text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-widest">Active: {banners.length} </p>
             </div>
           </div>
-          {banners.length < 2 && (
+          
             <Link href="/dashboard/banners/add" className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-black text-xs uppercase hover:bg-slate-900 transition-all shadow-lg">
               <PlusCircle size={16} /> New Banner
             </Link>
-          )}
+          
         </div>
 
         <div className="bg-white rounded-xl border-2 border-slate-300 overflow-hidden shadow-sm">
