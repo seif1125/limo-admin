@@ -59,6 +59,7 @@ export default function DashboardPage() {
   // Live Stats Calculation
   const activeCount = requests.filter(r => r.status === 'active').length;
   const pendingCount = requests.filter(r => r.status === 'pending').length;
+  const completedCount = requests.filter(r => r.status === 'complete').length;
 
   const RateIndicator = ({ reserved, current }) => {
     if (reserved > current) return <div className="flex items-center gap-0.5 text-emerald-500 font-black"><ArrowUpRight size={12}/> <span className="text-[9px]">+{reserved - current}</span></div>;
@@ -94,6 +95,11 @@ export default function DashboardPage() {
                     <div className="flex flex-col items-center">
                         <span className="text-amber-500 font-black text-xl">{pendingCount}</span>
                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100"></div>
+                    <div className="flex flex-col items-center">
+                        <span className="text-emerald-600 font-black text-xl">{completedCount}</span>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Completed</span>
                     </div>
                 </div>
 

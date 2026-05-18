@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, use } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Save, X, Upload, Clock, Settings2, ShieldCheck, Camera } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, Clock, Settings2, ShieldCheck, Camera, Star, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -113,17 +113,19 @@ export default function EditCarPage({ params }) {
         
         {/* Header Section */}
         <div className="flex justify-between items-center mb-10">
-            <Link href="/dashboard/fleet" className="text-xs font-black text-slate-400 uppercase flex items-center gap-2"><ArrowLeft size={16} /> Back</Link>
+            <Link href="/dashboard/fleet" className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 hover:text-blue-600 transition-colors">
+              <ArrowLeft size={16} /> Back to Inventory
+            </Link>
         </div>
 
         {/* GALLERY SECTION */}
-        <section className="mb-12">
+        <section className="mb-8">
           <label className={labelClass}>Vehicle Gallery</label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
             {existingImages.map((url, i) => (
               <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border-2 border-blue-600">
                 <img src={url} className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setExistingImages(existingImages.filter(img => img !== url))} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg"><X size={14}/></button>
+                <button type="button" onClick={() => setExistingImages(existingImages.filter(img => img !== url))} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors"><X size={14}/></button>
               </div>
             ))}
             {newFiles.map((img, i) => (
@@ -132,8 +134,9 @@ export default function EditCarPage({ params }) {
                 <button type="button" onClick={() => setNewFiles(newFiles.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 bg-slate-800 text-white p-1.5 rounded-lg"><X size={14}/></button>
               </div>
             ))}
-            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer">
-              <Camera size={24} className="text-slate-300" />
+            <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50 transition-colors rounded-2xl cursor-pointer">
+              <Camera size={24} className="text-slate-400 mb-2" />
+              <span className="text-[10px] font-black uppercase text-slate-400">Add Media</span>
               <input type="file" multiple className="hidden" onChange={(e) => {
                  const files = Array.from(e.target.files).map(f => ({ file: f, preview: URL.createObjectURL(f) }));
                  setNewFiles([...newFiles, ...files]);
@@ -142,20 +145,69 @@ export default function EditCarPage({ params }) {
           </div>
         </section>
 
+        {/* STATUS & VISIBILITY TOGGLES */}
+        <div className="flex flex-wrap gap-8 mb-12 p-6 bg-slate-50 rounded-3xl border-2 border-slate-100">
+          {/* Available Toggle */}
+          <label className="flex items-center cursor-pointer gap-4 group">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                className="sr-only" 
+                checked={formData.isAvailable} 
+                onChange={e => setFormData({...formData, isAvailable: e.target.checked})} 
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ease-in-out ${formData.isAvailable ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center ${formData.isAvailable ? 'transform translate-x-6' : ''}`}>
+                {formData.isAvailable && <CheckCircle size={14} className="text-emerald-500" />}
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600 transition-colors">Available</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Visible in fleet</span>
+            </div>
+          </label>
+
+          {/* Featured Toggle */}
+          <label className="flex items-center cursor-pointer gap-4 group">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                className="sr-only" 
+                checked={formData.featured} 
+                onChange={e => setFormData({...formData, featured: e.target.checked})} 
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ease-in-out ${formData.featured ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center ${formData.featured ? 'transform translate-x-6' : ''}`}>
+                 {formData.featured && <Star size={14} className="text-amber-500 fill-current" />}
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black uppercase text-slate-900 group-hover:text-amber-600 transition-colors">Featured</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Show on homepage</span>
+            </div>
+          </label>
+        </div>
+
         {/* Main Inputs Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-12">
             <div className="space-y-6">
-                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><Settings2 size={16}/> Basic Details</h3>
-                <label className={labelClass}>Category</label>
-                <select className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                    {categories.map(c => <option key={c._id} value={c._id}>{c.name_en}</option>)}
-                </select>
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><Settings2 size={16} className="inline mr-2"/> Basic Details</h3>
+                <div>
+                  <label className={labelClass}>Category</label>
+                  <select className={inputClass} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                      {categories.map(c => <option key={c._id} value={c._id}>{c.name_en}</option>)}
+                  </select>
+                </div>
                 <div><label className={labelClass}>Name (EN)</label><input className={inputClass} value={formData.name_en} onChange={e => setFormData({...formData, name_en: e.target.value})} /></div>
                 <div><label className={labelClass}>Name (AR)</label><input className={inputClass} dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div><label className={labelClass}>Model Year</label><input type="number" className={inputClass} value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} /></div>
+                    <div><label className={labelClass}>Price ($)</label><input type="number" className={inputClass} value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} /></div>
+                </div>
             </div>
 
             <div className="space-y-6">
-                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><ShieldCheck size={16}/> Technical Specs</h3>
+                <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4"><ShieldCheck size={16} className="inline mr-2"/> Technical Specs</h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div><label className={labelClass}>Passengers</label><input type="number" className={inputClass} value={formData.specs.passengers} onChange={e => setFormData({...formData, specs: {...formData.specs, passengers: Number(e.target.value)}})} /></div>
                     <div><label className={labelClass}>Luggage</label><input type="number" className={inputClass} value={formData.specs.luggage} onChange={e => setFormData({...formData, specs: {...formData.specs, luggage: Number(e.target.value)}})} /></div>
@@ -174,9 +226,9 @@ export default function EditCarPage({ params }) {
             <h3 className="text-xs font-black uppercase text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><Clock size={16}/> Service Packages</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {[ { key: 'isStandardRental', label: 'Standard' }, { key: 'isFullDayRental', label: 'Full Day' }, { key: 'isAirport', label: 'Airport' }, { key: 'isCityToCity', label: 'City-to-City' } ].map(item => (
-                    <label key={item.key} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all text-center ${formData.rentalOptions[item.key] ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200'}`}>
+                    <label key={item.key} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all text-center ${formData.rentalOptions[item.key] ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white border-slate-200 hover:border-blue-400'}`}>
                         <input type="checkbox" className="hidden" checked={formData.rentalOptions[item.key]} onChange={e => setFormData({...formData, rentalOptions: {...formData.rentalOptions, [item.key]: e.target.checked}})} />
-                        <span className="text-[10px] font-black uppercase">{item.label}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
                     </label>
                 ))}
             </div>
@@ -191,8 +243,9 @@ export default function EditCarPage({ params }) {
             )}
         </div>
 
-        <button disabled={!isFormValid || !hasChanges || actionLoading} className="w-full p-8 rounded-[2rem] bg-slate-900 text-white font-black uppercase tracking-[0.2em]">
-          {actionLoading ? "Updating..." : "Commit Changes"}
+        <button disabled={!isFormValid || !hasChanges || actionLoading} className={`w-full p-8 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all flex justify-center items-center gap-3 ${isFormValid && hasChanges ? 'bg-slate-900 text-white hover:bg-blue-600 shadow-2xl' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+          <Save size={24} />
+          {actionLoading ? "Updating Ledger..." : "Commit Changes"}
         </button>
       </form>
     </div>

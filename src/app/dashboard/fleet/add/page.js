@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { ArrowLeft, Upload, X, Save, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Upload, X, Save, ShieldCheck,Star,CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import OverlayLoader from '@/components/loader';
 
@@ -19,6 +19,8 @@ export default function AddCarPage() {
     description_en: '', description_ar: '',
     year: new Date().getFullYear(),
     category: '', price: '',
+    featured: false,      
+    isAvailable: true,
     rentalOptions: {
       isFullDayRental: false,
       isStandardRental: true,
@@ -122,6 +124,48 @@ export default function AddCarPage() {
               <textarea className={`${inputClass} h-[120px]`} dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})} />
             </div>
           </div>
+            {/* STATUS & VISIBILITY TOGGLES */}
+        <div className="flex flex-wrap gap-8 mb-12 p-6 bg-slate-50 rounded-3xl border-2 border-slate-100">
+          {/* Available Toggle */}
+          <label className="flex items-center cursor-pointer gap-4 group">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                className="sr-only" 
+                checked={formData.isAvailable} 
+                onChange={e => setFormData({...formData, isAvailable: e.target.checked})} 
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ease-in-out ${formData.isAvailable ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center ${formData.isAvailable ? 'transform translate-x-6' : ''}`}>
+                {formData.isAvailable && <CheckCircle size={14} className="text-emerald-500" />}
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black uppercase text-slate-900 group-hover:text-emerald-600 transition-colors">Available</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Visible in fleet</span>
+            </div>
+          </label>
+
+          {/* Featured Toggle */}
+          <label className="flex items-center cursor-pointer gap-4 group">
+            <div className="relative">
+              <input 
+                type="checkbox" 
+                className="sr-only" 
+                checked={formData.featured} 
+                onChange={e => setFormData({...formData, featured: e.target.checked})} 
+              />
+              <div className={`block w-14 h-8 rounded-full transition-colors duration-300 ease-in-out ${formData.featured ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
+              <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 ease-in-out flex items-center justify-center ${formData.featured ? 'transform translate-x-6' : ''}`}>
+                 {formData.featured && <Star size={14} className="text-amber-500 fill-current" />}
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black uppercase text-slate-900 group-hover:text-amber-600 transition-colors">Featured</span>
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Show on homepage</span>
+            </div>
+          </label>
+        </div>
 
           {/* SECTION: RENTAL SERVICES */}
           <div className="mb-10 p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
